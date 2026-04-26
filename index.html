@@ -1445,23 +1445,6 @@ async function openJob(job, options = {}) {
     </div>
   `;
 
-  if (embeds.required?.length > 0) {
-    body += '<div class="modal-section"><h3>דרישות חובה</h3><div class="questions-section">';
-    embeds.required.forEach(r => {
-      const time = r.minTimeMonths ? ` <span style="color:#6b7280;font-size:12px">(${r.minTimeMonths}${r.maxTimeMonths ? '–'+r.maxTimeMonths : '+'} חודשים)</span>` : '';
-      body += `<div class="question-item required"><span class="question-label required">⭐ חובה</span><div class="question-text">${escHtml(r.text)}${time}</div></div>`;
-    });
-    body += '</div></div>';
-  }
-
-  if (embeds.optional?.length > 0) {
-    body += '<div class="modal-section"><h3>דרישות יתרון</h3><div class="questions-section">';
-    embeds.optional.forEach(o => {
-      body += `<div class="question-item optional"><span class="question-label optional">✓ יתרון</span><div class="question-text">${escHtml(o.text)}</div></div>`;
-    });
-    body += '</div></div>';
-  }
-
   if (embeds.validThrough) {
     body += `<div class="modal-section"><p style="padding:12px;background:#fef3c7;border-radius:6px;border-right:3px solid var(--amber)">⏳ תוקף עד: <strong>${embeds.validThrough}</strong></p></div>`;
   }
