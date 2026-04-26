@@ -90,6 +90,23 @@
     line-height: 1.2;
   }
 
+  .hero-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(88px, 11vw, 126px);
+    margin-right: 4px;
+    vertical-align: -0.56em;
+    transform: translate(6px, 0.66em);
+    filter: drop-shadow(0 12px 18px rgba(15, 90, 96, 0.12));
+  }
+
+  .hero-brand-mark img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
   .hero-highlight {
     background: linear-gradient(135deg, #f0f9ff, #cffafe);
     color: var(--cyan-dark);
@@ -1058,7 +1075,7 @@
 <div class="container">
   <!-- Hero -->
   <div class="hero">
-    <h2>מצא את המשרה המושלמת <span style="background: linear-gradient(135deg, #f0f9ff, #cffafe); color: var(--cyan-dark); padding: 8px 16px; border-radius: 8px; border: 1px solid #a5f3fc; display: inline-block; font-size: 0.9em; margin-right: 8px;">DJob</span></h2>
+    <h2>מצא את המשרה המושלמת <span class="hero-brand-mark"><img src="/assets/job-logo-transparent.png" alt="DJob"></span></h2>
     <div class="hero-highlight">לוח הדרושים המובילים בישראל - אלפי משרות פתוחות בחברות מובילות</div>
   </div>
 
