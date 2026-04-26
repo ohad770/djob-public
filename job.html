@@ -483,6 +483,7 @@ const noResumeMode = params.get('noresume') === 'true';
 let currentJob = null;
 let loaderShownAt = Date.now();
 let loaderHideTimer = null;
+let pendingCvPickerSync = false;
 const shareButton = document.getElementById('share-btn');
 
 if (shareButton) {
@@ -517,6 +518,11 @@ function escHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+const CV_EMPTY_LABEL_HTML = `
+  לחץ לבחירת קובץ או גרור לכאן<br>
+  <span style="font-size:11px;color:#6b7280">PDF, DOC או DOCX עד 4MB</span>
+`;
 
 function splitField(val) {
   if (!val) return [];
@@ -651,14 +657,13 @@ function renderSidebar(job) {
     <div class="form-group">
       <label class="form-label">קורות חיים<span class="form-required">*</span></label>
       <div class="cv-upload-zone" id="cv-zone"
-        onclick="document.getElementById('cv-file').click()"
+        onclick="openCvPicker()"
         ondragover="event.preventDefault();this.classList.add('drag-over')"
         ondragleave="this.classList.remove('drag-over')"
         ondrop="handleCvDrop(event)">
         <span class="cv-upload-icon">📎</span>
         <div class="cv-upload-label" id="cv-label">
-          לחץ לבחירת קובץ או גרור לכאן<br>
-          <span style="font-size:11px;color:#6b7280">PDF, DOC או DOCX עד 4MB</span>
+          ${CV_EMPTY_LABEL_HTML}
         </div>
         <input type="file" id="cv-file" accept=".pdf,.doc,.docx" onchange="handleCvSelect(event)">
       </div>
@@ -726,12 +731,21 @@ function validateResumeFile(file) {
   return '';
 }
 
+function resetCvFileUi() {
+  const zone = document.getElementById('cv-zone');
+  const label = document.getElementById('cv-label');
+  if (!zone || !label) return;
+  zone.classList.remove('has-file');
+  label.innerHTML = CV_EMPTY_LABEL_HTML;
+}
+
 function setCvFile(file) {
   const zone = document.getElementById('cv-zone');
   const label = document.getElementById('cv-label');
   if (!zone || !label) return;
   const fileError = validateResumeFile(file);
   if (fileError) {
+    resetCvFileUi();
     showApplyError(fileError);
     return;
   }
@@ -739,9 +753,31 @@ function setCvFile(file) {
   label.innerHTML = `<span class="cv-upload-filename">📄 ${escHtml(file.name)}</span><br><span style="font-size:11px;color:#6b7280">${Math.round(file.size / 1024)} KB</span>`;
 }
 
+function syncCvUiFromInput() {
+  const input = document.getElementById('cv-file');
+  const file = input?.files?.[0];
+  if (file) {
+    setCvFile(file);
+  } else {
+    resetCvFileUi();
+  }
+}
+
+function openCvPicker() {
+  const input = document.getElementById('cv-file');
+  if (!input) return;
+  pendingCvPickerSync = true;
+  input.click();
+}
+
 function handleCvSelect(event) {
+  pendingCvPickerSync = false;
   const file = event.target.files[0];
-  if (file) setCvFile(file);
+  if (file) {
+    setCvFile(file);
+  } else {
+    resetCvFileUi();
+  }
 }
 
 function handleCvDrop(event) {
@@ -758,8 +794,17 @@ function handleCvDrop(event) {
   const dataTransfer = new DataTransfer();
   dataTransfer.items.add(file);
   document.getElementById('cv-file').files = dataTransfer.files;
+  pendingCvPickerSync = false;
   setCvFile(file);
 }
+
+window.addEventListener('focus', () => {
+  if (!pendingCvPickerSync) return;
+  window.setTimeout(() => {
+    pendingCvPickerSync = false;
+    syncCvUiFromInput();
+  }, 0);
+});
 
 async function submitApplication() {
   if (!currentJob) return;
