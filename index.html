@@ -1348,7 +1348,7 @@ function renderSidebar(job, position) {
           <span class="cv-upload-icon">📎</span>
           <div class="cv-upload-label" id="cv-label">
             לחץ לבחירת קובץ או גרור לכאן<br>
-            <span style="font-size:11px;color:#9ca3af">PDF או DOC עד 5MB</span>
+            <span style="font-size:11px;color:#9ca3af">PDF או DOC עד 4MB</span>
           </div>
           <input type="file" id="cv-file" accept=".pdf,.doc" onchange="handleCvSelect(event)">
         </div>
@@ -1397,7 +1397,7 @@ function validateResumeFile(file) {
   if (!file) return 'נא לצרף קורות חיים';
   const ext = file.name.split('.').pop()?.toLowerCase();
   if (!['pdf', 'doc'].includes(ext)) return 'ניתן להעלות רק קובץ PDF או DOC';
-  if (file.size > 5 * 1024 * 1024) return 'גודל הקובץ המקסימלי הוא 5MB';
+  if (file.size > 4 * 1024 * 1024) return 'גודל הקובץ המקסימלי הוא 4MB';
   return '';
 }
 
