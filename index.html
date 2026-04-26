@@ -1187,14 +1187,16 @@ const API = `${window.location.origin}/api`;
 let allJobs = [];
 const jobCacheByPositionId = new Map();
 const jobCacheByJobNumber = new Map();
-const loaderShownAt = Date.now();
+const JOBS_CACHE_KEY = 'djobPublicJobsCacheV1';
+const JOBS_CACHE_MAX_AGE_MS = 1000 * 60 * 15;
+let loaderShownAt = Date.now();
 let loaderHideTimer = null;
 
-function hideJobLoader() {
+function hideJobLoader(immediate = false) {
   const loaderEl = document.getElementById('job-loader-overlay');
   if (!loaderEl) return;
   const elapsed = Date.now() - loaderShownAt;
-  const waitMs = Math.max(0, 800 - elapsed);
+  const waitMs = immediate ? 0 : Math.max(0, 800 - elapsed);
   if (loaderHideTimer) {
     window.clearTimeout(loaderHideTimer);
   }
@@ -1204,17 +1206,67 @@ function hideJobLoader() {
   }, waitMs);
 }
 
+function readJobsCache() {
+  try {
+    const raw = localStorage.getItem(JOBS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.jobs)) return null;
+    return {
+      jobs: parsed.jobs,
+      cachedAt: Number(parsed.cachedAt || 0),
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeJobsCache(jobs) {
+  try {
+    localStorage.setItem(JOBS_CACHE_KEY, JSON.stringify({
+      cachedAt: Date.now(),
+      jobs: Array.isArray(jobs) ? jobs : [],
+    }));
+    syncFilterOptionsCacheFromJobs(jobs);
+  } catch (error) {
+    // Ignore storage quota / privacy mode issues and continue with live data.
+  }
+}
+
+function renderJobsFromSource(jobs) {
+  allJobs = Array.isArray(jobs) ? jobs : [];
+  primeJobCache(allJobs);
+  document.getElementById('stats-text').textContent = `נמצאו ${allJobs.length} משרות`;
+  filterJobs();
+}
+
 async function loadJobs() {
+  const cached = readJobsCache();
+  if (cached?.jobs?.length) {
+    renderJobsFromSource(cached.jobs);
+    hideJobLoader(true);
+  }
+
   try {
     const r = await fetch(`${API}/jobs`).then(r => r.json());
-    allJobs = r.data || [];
-    primeJobCache(allJobs);
+    const freshJobs = Array.isArray(r.data) ? r.data : [];
+    const cacheAgeMs = cached?.cachedAt ? (Date.now() - cached.cachedAt) : Infinity;
+    const shouldRefreshUi = !cached?.jobs?.length
+      || JSON.stringify(cached.jobs) !== JSON.stringify(freshJobs)
+      || cacheAgeMs > JOBS_CACHE_MAX_AGE_MS;
 
-    document.getElementById('stats-text').textContent = `נמצאו ${allJobs.length} משרות`;
-    filterJobs();
+    writeJobsCache(freshJobs);
+    if (shouldRefreshUi) {
+      renderJobsFromSource(freshJobs);
+    } else {
+      primeJobCache(freshJobs);
+      allJobs = freshJobs;
+    }
     hideJobLoader();
   } catch (e) {
-    document.getElementById('stats-text').textContent = 'שגיאה בטעינת משרות';
+    if (!cached?.jobs?.length) {
+      document.getElementById('stats-text').textContent = 'שגיאה בטעינת משרות';
+    }
     hideJobLoader();
   }
 }
@@ -1239,6 +1291,31 @@ function splitField(val) {
                                  : [String(parsed).trim()];
   } catch(e) {
     return val.split(',').map(s => s.trim()).filter(Boolean);
+  }
+}
+
+function deriveFilterOptionsFromJobs(jobs) {
+  const categories = new Set();
+  const locations = new Set();
+
+  (Array.isArray(jobs) ? jobs : []).forEach((job) => {
+    splitField(job?.category).forEach((value) => categories.add(value));
+    splitField(job?.location).forEach((value) => locations.add(value));
+  });
+
+  return {
+    categories: Array.from(categories).sort((a, b) => a.localeCompare(b, 'he')),
+    locations: Array.from(locations).sort((a, b) => a.localeCompare(b, 'he')),
+  };
+}
+
+function syncFilterOptionsCacheFromJobs(jobs) {
+  try {
+    const derived = deriveFilterOptionsFromJobs(jobs);
+    localStorage.setItem('jobCategories', JSON.stringify(derived.categories));
+    localStorage.setItem('jobLocations', JSON.stringify(derived.locations));
+  } catch (error) {
+    // Ignore storage issues and keep working with in-memory data.
   }
 }
 
@@ -1824,6 +1901,12 @@ async function loadFilterOptions() {
     // Try to get from localStorage first
     let categories = JSON.parse(localStorage.getItem('jobCategories') || 'null');
     let locations = JSON.parse(localStorage.getItem('jobLocations') || 'null');
+
+    if ((!categories || !locations) && Array.isArray(allJobs) && allJobs.length) {
+      const derived = deriveFilterOptionsFromJobs(allJobs);
+      categories = categories || derived.categories;
+      locations = locations || derived.locations;
+    }
 
     // If not in localStorage, fetch from API
     if (!categories || !locations) {
