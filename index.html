@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>מצא את המשרה שלך | משרות פתוחות</title>
+<script>
+  try {
+    const raw = localStorage.getItem('djobPublicJobsCacheV1');
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed && Array.isArray(parsed.jobs) && parsed.jobs.length > 0) {
+      document.documentElement.classList.add('has-jobs-cache');
+    }
+  } catch (error) {}
+</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -548,6 +557,12 @@
   }
 
   .job-loader-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  html.has-jobs-cache .job-loader-overlay {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
