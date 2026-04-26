@@ -1533,19 +1533,25 @@ let currentJob = null;
 let currentPosition = null;
 let currentNoResume = false;
 
+function resetJobModalScroll() {
+  const overlayEl = document.getElementById('modal');
+  const modalEl = document.querySelector('#modal .modal');
+  const modalMainEl = document.querySelector('#modal .modal-main');
+  const modalBodyEl = document.getElementById('modal-body');
+  const modalSidebarEl = document.getElementById('modal-sidebar');
+
+  [overlayEl, modalEl, modalMainEl, modalBodyEl, modalSidebarEl].forEach((el) => {
+    if (el) el.scrollTop = 0;
+  });
+}
+
 // ── Open Job Modal ──────────────────────────────────────
 async function openJob(job, options = {}) {
   currentJob = job;
   const details = getCachedJobDetails(job) || job;
   currentPosition = details;
   currentNoResume = options.noresume === true;
-  const modalEl = document.querySelector('#modal .modal');
-  const modalMainEl = document.querySelector('#modal .modal-main');
-  const modalSidebarEl = document.getElementById('modal-sidebar');
-
-  if (modalEl) modalEl.scrollTop = 0;
-  if (modalMainEl) modalMainEl.scrollTop = 0;
-  if (modalSidebarEl) modalSidebarEl.scrollTop = 0;
+  resetJobModalScroll();
 
   // Title
   const titleEl = document.getElementById('modal-title');
@@ -1586,6 +1592,13 @@ async function openJob(job, options = {}) {
   renderSidebar(job, details);
 
   document.getElementById('modal').classList.add('open');
+  resetJobModalScroll();
+  requestAnimationFrame(() => {
+    resetJobModalScroll();
+    requestAnimationFrame(() => {
+      resetJobModalScroll();
+    });
+  });
 }
 
 // ── Sidebar renderer ────────────────────────────────────
@@ -1812,7 +1825,10 @@ async function showComparison() {
   document.getElementById('comparison-modal').classList.add('open');
 }
 
-function closeModal()      { document.getElementById('modal').classList.remove('open'); }
+function closeModal()      {
+  document.getElementById('modal').classList.remove('open');
+  resetJobModalScroll();
+}
 function closeComparison() { document.getElementById('comparison-modal').classList.remove('open'); }
 
 // ── Utility ─────────────────────────────────────────────
