@@ -1447,6 +1447,13 @@ async function openJob(job, options = {}) {
   const details = getCachedJobDetails(job) || job;
   currentPosition = details;
   currentNoResume = options.noresume === true;
+  const modalEl = document.querySelector('#modal .modal');
+  const modalMainEl = document.querySelector('#modal .modal-main');
+  const modalSidebarEl = document.getElementById('modal-sidebar');
+
+  if (modalEl) modalEl.scrollTop = 0;
+  if (modalMainEl) modalMainEl.scrollTop = 0;
+  if (modalSidebarEl) modalSidebarEl.scrollTop = 0;
 
   // Title
   const titleEl = document.getElementById('modal-title');
