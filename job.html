@@ -309,59 +309,54 @@
     text-align: center;
   }
 
-  .job-loader-mark {
+  .job-loader-figure {
     position: relative;
-    width: 220px;
-    height: 165px;
-    border-radius: 0 110px 110px 0;
-    background: linear-gradient(145deg, #14525a 0%, #0f5a60 58%, #0d4750 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 24px 55px rgba(15, 90, 96, 0.18);
-    animation: loader-float 2.8s ease-in-out infinite;
-    overflow: visible;
+    width: min(42vw, 320px);
+    aspect-ratio: 1;
+    animation: loader-float 3.2s ease-in-out infinite;
   }
 
-  .job-loader-mark::before {
+  .job-loader-figure::before {
     content: '';
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(140deg, rgba(255,255,255,0.2), rgba(255,255,255,0) 38%);
-  }
-
-  .job-loader-mark::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    right: 12px;
-    width: 250px;
-    height: 250px;
-    background: linear-gradient(135deg, rgba(15, 90, 96, 0.22), rgba(15, 90, 96, 0));
-    clip-path: polygon(0 0, 100% 0, 0 100%);
-    filter: blur(8px);
+    inset: 72% 12% -5% 12%;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(15, 90, 96, 0.18), rgba(15, 90, 96, 0));
+    filter: blur(16px);
     opacity: 0.8;
-    transform-origin: top right;
-    animation: loader-shadow 2.8s ease-in-out infinite;
+    animation: loader-shadow 3.2s ease-in-out infinite;
+  }
+
+  .job-loader-figure::after {
+    content: '';
+    position: absolute;
+    inset: 8%;
+    border-radius: 42px;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.7), rgba(255,255,255,0));
+    filter: blur(18px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .job-loader-image {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: flex;
+    filter: drop-shadow(0 22px 36px rgba(15, 90, 96, 0.16));
   }
 
   .job-loader-echo {
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.18);
-    animation: loader-echo 2.8s ease-out infinite;
-  }
-
-  .job-loader-text {
-    position: relative;
-    z-index: 2;
-    color: #f8fafc;
-    font-size: 62px;
-    font-weight: 800;
-    letter-spacing: 3px;
-    line-height: 1;
+    inset: 15%;
+    border-radius: 42px;
+    box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.16);
+    animation: loader-echo 3.2s ease-out infinite;
   }
 
   .job-loader-copy {
@@ -400,18 +395,18 @@
   .job-loader-dot:nth-child(3) { animation-delay: 0.32s; }
 
   @keyframes loader-float {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-    50% { transform: translate3d(0, -8px, 0) scale(1.015); }
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg) scale(1); }
+    50% { transform: translate3d(0, -10px, 0) rotate(1.5deg) scale(1.02); }
   }
 
   @keyframes loader-shadow {
-    0%, 100% { transform: skewX(0deg) scale(1); opacity: 0.75; }
-    50% { transform: translate3d(10px, 8px, 0) scale(1.03); opacity: 0.58; }
+    0%, 100% { transform: scale(1); opacity: 0.45; }
+    50% { transform: scale(0.88); opacity: 0.28; }
   }
 
   @keyframes loader-echo {
-    0% { box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.16); opacity: 0.95; }
-    70% { box-shadow: 0 0 0 18px rgba(8, 145, 178, 0); opacity: 0.2; }
+    0% { box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.14); opacity: 0.9; }
+    70% { box-shadow: 0 0 0 22px rgba(8, 145, 178, 0); opacity: 0.14; }
     100% { box-shadow: 0 0 0 0 rgba(8, 145, 178, 0); opacity: 0; }
   }
 
@@ -421,8 +416,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .job-loader-mark,
-    .job-loader-mark::after,
+    .job-loader-figure,
+    .job-loader-figure::before,
     .job-loader-echo,
     .job-loader-dot {
       animation: none;
@@ -443,13 +438,13 @@
 <body>
   <div class="job-loader-overlay" id="job-loader-overlay" aria-live="polite" aria-label="טוען משרה">
     <div class="job-loader-inner">
-      <div class="job-loader-mark" aria-hidden="true">
+      <div class="job-loader-figure" aria-hidden="true">
         <div class="job-loader-echo"></div>
-        <div class="job-loader-text">JOB</div>
+        <img class="job-loader-image" src="/assets/job-loader-logo.png" alt="" />
       </div>
       <div class="job-loader-copy">
-        <div class="job-loader-title">מעלים את המשרה</div>
-        <div class="job-loader-subtitle">רק עוד רגע ואנחנו בפנים</div>
+        <div class="job-loader-title" id="job-loader-title">מעלים את המשרה</div>
+        <div class="job-loader-subtitle" id="job-loader-subtitle">רק עוד רגע ואנחנו בפנים</div>
         <div class="job-loader-dots" aria-hidden="true">
           <span class="job-loader-dot"></span>
           <span class="job-loader-dot"></span>
@@ -486,8 +481,8 @@ const params = new URLSearchParams(window.location.search);
 const jobNumber = params.get('n');
 const noResumeMode = params.get('noresume') === 'true';
 let currentJob = null;
-const loaderShownAt = Date.now();
-let loaderHidden = false;
+let loaderShownAt = Date.now();
+let loaderHideTimer = null;
 const shareButton = document.getElementById('share-btn');
 
 if (shareButton) {
@@ -546,15 +541,29 @@ function renderError(message) {
   `;
 }
 
+function showJobLoader(title = 'מעלים את המשרה', subtitle = 'רק עוד רגע ואנחנו בפנים') {
+  const loaderEl = document.getElementById('job-loader-overlay');
+  const titleEl = document.getElementById('job-loader-title');
+  const subtitleEl = document.getElementById('job-loader-subtitle');
+  if (!loaderEl) return;
+  if (loaderHideTimer) {
+    window.clearTimeout(loaderHideTimer);
+    loaderHideTimer = null;
+  }
+  if (titleEl) titleEl.textContent = title;
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+  loaderShownAt = Date.now();
+  loaderEl.classList.remove('hidden');
+}
+
 function hideJobLoader() {
-  if (loaderHidden) return;
-  loaderHidden = true;
   const loaderEl = document.getElementById('job-loader-overlay');
   if (!loaderEl) return;
   const elapsed = Date.now() - loaderShownAt;
   const waitMs = Math.max(0, 800 - elapsed);
-  window.setTimeout(() => {
+  loaderHideTimer = window.setTimeout(() => {
     loaderEl.classList.add('hidden');
+    loaderHideTimer = null;
   }, waitMs);
 }
 
@@ -777,6 +786,10 @@ async function submitApplication() {
   const button = document.getElementById('apply-btn');
   button.disabled = true;
   button.textContent = '⏳ שולח...';
+  showJobLoader(
+    noResumeMode ? 'שולחים את המועמדות' : 'מעלים את קורות החיים',
+    noResumeMode ? 'רק עוד רגע והמועמדות שלך בפנים' : 'רק עוד רגע והקובץ בדרך אלינו'
+  );
 
   try {
     const formData = new FormData();
@@ -805,9 +818,11 @@ async function submitApplication() {
 
     showApplySuccess('מועמדותך התקבלה בהצלחה! נחזור אליך בהקדם.');
     button.textContent = 'נשלח בהצלחה ✓';
+    hideJobLoader();
   } catch (error) {
     button.disabled = false;
     button.textContent = 'שלח מועמדות →';
+    hideJobLoader();
     showApplyError(error.message || 'שליחת המועמדות נכשלה');
   }
 }
