@@ -401,42 +401,6 @@ function renderJob(job) {
   if (job.internal_salary) meta.push(`<div class="meta-item">💰 <span>${escHtml(job.internal_salary)}</span></div>`);
 
   let requirementsHtml = '';
-  if (embeds.required?.length > 0) {
-    requirementsHtml += `
-      <div class="modal-section">
-        <h3>דרישות חובה</h3>
-        <div class="questions-section">
-          ${embeds.required.map(item => {
-            const timeText = item.minTimeMonths
-              ? ` <span style="color:#6b7280;font-size:12px">(${item.minTimeMonths}${item.maxTimeMonths ? '-' + item.maxTimeMonths : '+'} חודשים)</span>`
-              : '';
-            return `
-              <div class="question-item required">
-                <div class="question-label required">⭐ חובה</div>
-                <div class="question-text">${escHtml(item.text || '')}${timeText}</div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  if (embeds.optional?.length > 0) {
-    requirementsHtml += `
-      <div class="modal-section">
-        <h3>דרישות יתרון</h3>
-        <div class="questions-section">
-          ${embeds.optional.map(item => `
-            <div class="question-item optional">
-              <div class="question-label optional">✓ יתרון</div>
-              <div class="question-text">${escHtml(item.text || '')}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
 
   if (embeds.validThrough) {
     requirementsHtml += `
