@@ -517,6 +517,139 @@
     color: var(--gray-500);
   }
 
+  .job-loader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at top, rgba(255,255,255,0.92), rgba(239,248,246,0.98)),
+      linear-gradient(135deg, #eff9f7 0%, #fff8ec 100%);
+    transition: opacity .45s ease, visibility .45s ease;
+  }
+
+  .job-loader-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .job-loader-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    text-align: center;
+  }
+
+  .job-loader-figure {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(42vw, 320px);
+    aspect-ratio: 1;
+    animation: loader-float 3.2s ease-in-out infinite;
+  }
+
+  .job-loader-figure::before {
+    content: '';
+    position: absolute;
+    inset: 72% 12% -5% 12%;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(15, 90, 96, 0.18), rgba(15, 90, 96, 0));
+    filter: blur(16px);
+    opacity: 0.8;
+    animation: loader-shadow 3.2s ease-in-out infinite;
+  }
+
+  .job-loader-figure::after {
+    content: '';
+    position: absolute;
+    inset: 8%;
+    border-radius: 42px;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.7), rgba(255,255,255,0));
+    filter: blur(18px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .job-loader-image {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: flex;
+    filter: drop-shadow(0 22px 36px rgba(15, 90, 96, 0.16));
+  }
+
+  .job-loader-echo {
+    position: absolute;
+    inset: 15%;
+    border-radius: 42px;
+    box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.16);
+    animation: loader-echo 3.2s ease-out infinite;
+  }
+
+  .job-loader-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .job-loader-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #164e63;
+  }
+
+  .job-loader-subtitle {
+    font-size: 14px;
+    color: var(--gray-500);
+  }
+
+  .job-loader-dots {
+    display: inline-flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .job-loader-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #0f5a60;
+    animation: loader-dot 1.2s ease-in-out infinite;
+  }
+
+  .job-loader-dot:nth-child(2) { animation-delay: 0.16s; }
+  .job-loader-dot:nth-child(3) { animation-delay: 0.32s; }
+
+  @keyframes loader-float {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg) scale(1); }
+    50% { transform: translate3d(0, -10px, 0) rotate(1.5deg) scale(1.02); }
+  }
+
+  @keyframes loader-shadow {
+    0%, 100% { transform: scale(1); opacity: 0.45; }
+    50% { transform: scale(0.88); opacity: 0.28; }
+  }
+
+  @keyframes loader-echo {
+    0% { box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.14); opacity: 0.9; }
+    70% { box-shadow: 0 0 0 22px rgba(8, 145, 178, 0); opacity: 0.14; }
+    100% { box-shadow: 0 0 0 0 rgba(8, 145, 178, 0); opacity: 0; }
+  }
+
+  @keyframes loader-dot {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
   /* Modal */
   .modal-overlay {
     display: none;
@@ -892,10 +1025,35 @@
     .modal h2 { font-size: 22px; }
     .meta-row { gap: 10px; }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .job-loader-figure,
+    .job-loader-figure::before,
+    .job-loader-echo,
+    .job-loader-dot {
+      animation: none;
+    }
+  }
 </style>
 </head>
 <body>
-
+<div class="job-loader-overlay" id="job-loader-overlay" aria-live="polite" aria-label="טוען משרות">
+  <div class="job-loader-inner">
+    <div class="job-loader-figure" aria-hidden="true">
+      <div class="job-loader-echo"></div>
+      <img class="job-loader-image" src="/assets/job-loader-logo.png" alt="" />
+    </div>
+    <div class="job-loader-copy">
+      <div class="job-loader-title">מעלים את המשרות</div>
+      <div class="job-loader-subtitle">רק עוד רגע וכל ההזדמנויות אצלך</div>
+      <div class="job-loader-dots" aria-hidden="true">
+        <span class="job-loader-dot"></span>
+        <span class="job-loader-dot"></span>
+        <span class="job-loader-dot"></span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="container">
   <!-- Hero -->
@@ -1010,6 +1168,22 @@
 <script>
 const API = `${window.location.origin}/api`;
 let allJobs = [];
+const loaderShownAt = Date.now();
+let loaderHideTimer = null;
+
+function hideJobLoader() {
+  const loaderEl = document.getElementById('job-loader-overlay');
+  if (!loaderEl) return;
+  const elapsed = Date.now() - loaderShownAt;
+  const waitMs = Math.max(0, 800 - elapsed);
+  if (loaderHideTimer) {
+    window.clearTimeout(loaderHideTimer);
+  }
+  loaderHideTimer = window.setTimeout(() => {
+    loaderEl.classList.add('hidden');
+    loaderHideTimer = null;
+  }, waitMs);
+}
 
 async function loadJobs() {
   try {
@@ -1018,8 +1192,10 @@ async function loadJobs() {
 
     document.getElementById('stats-text').textContent = `נמצאו ${allJobs.length} משרות`;
     filterJobs();
+    hideJobLoader();
   } catch (e) {
     document.getElementById('stats-text').textContent = 'שגיאה בטעינת משרות';
+    hideJobLoader();
   }
 }
 
