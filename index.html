@@ -1185,6 +1185,8 @@
 <script>
 const API = `${window.location.origin}/api`;
 let allJobs = [];
+const jobCacheByPositionId = new Map();
+const jobCacheByJobNumber = new Map();
 const loaderShownAt = Date.now();
 let loaderHideTimer = null;
 
@@ -1206,6 +1208,7 @@ async function loadJobs() {
   try {
     const r = await fetch(`${API}/jobs`).then(r => r.json());
     allJobs = r.data || [];
+    primeJobCache(allJobs);
 
     document.getElementById('stats-text').textContent = `נמצאו ${allJobs.length} משרות`;
     filterJobs();
@@ -1237,6 +1240,31 @@ function splitField(val) {
   } catch(e) {
     return val.split(',').map(s => s.trim()).filter(Boolean);
   }
+}
+
+function primeJobCache(jobs) {
+  jobCacheByPositionId.clear();
+  jobCacheByJobNumber.clear();
+  (Array.isArray(jobs) ? jobs : []).forEach((job) => {
+    if (!job || typeof job !== 'object') return;
+    if (job.position_id) {
+      jobCacheByPositionId.set(String(job.position_id), job);
+    }
+    if (job.job_number) {
+      jobCacheByJobNumber.set(String(job.job_number), job);
+    }
+  });
+}
+
+function getCachedJobDetails(job) {
+  if (!job || typeof job !== 'object') return null;
+  if (job.position_id && jobCacheByPositionId.has(String(job.position_id))) {
+    return jobCacheByPositionId.get(String(job.position_id));
+  }
+  if (job.job_number && jobCacheByJobNumber.has(String(job.job_number))) {
+    return jobCacheByJobNumber.get(String(job.job_number));
+  }
+  return job;
 }
 
 function onQuickApply(job) {
@@ -1416,7 +1444,8 @@ let currentNoResume = false;
 // ── Open Job Modal ──────────────────────────────────────
 async function openJob(job, options = {}) {
   currentJob = job;
-  currentPosition = null;
+  const details = getCachedJobDetails(job) || job;
+  currentPosition = details;
   currentNoResume = options.noresume === true;
 
   // Title
@@ -1425,14 +1454,19 @@ async function openJob(job, options = {}) {
 
   // Badges row
   const badges = [];
+  if (details?.category)      badges.push(`<span class="badge badge-category">${escHtml(details.category)}</span>`);
   if (job.is_quick_apply) badges.push('<span class="badge badge-quick">⚡ הגשה מהירה</span>');
   if (job.is_hot)         badges.push('<span class="badge badge-hot">🔥 חם</span>');
   if (job.is_sticky)      badges.push('<span class="badge badge-sticky">📌 מובטח</span>');
   if (job.job_number)     badges.push(`<span class="badge badge-job-num">#${job.job_number}</span>`);
   document.getElementById('modal-badges').innerHTML = badges.join('');
 
-  // Meta row — empty until position loads
-  document.getElementById('modal-meta').innerHTML = '<span style="color:#9ca3af;font-size:13px">טוען פרטים...</span>';
+  const meta = [];
+  if (details?.location)   meta.push(`<div class="meta-item">📍 <span>${escHtml(details.location)}</span></div>`);
+  if (details?.job_type)   meta.push(`<div class="meta-item">💼 <span>${escHtml(details.job_type)}</span></div>`);
+  if (details?.scope)      meta.push(`<div class="meta-item">⏰ <span>${escHtml(details.scope)}</span></div>`);
+  if (details?.internal_salary) meta.push(`<div class="meta-item">💰 <span>${escHtml(details.internal_salary)}</span></div>`);
+  document.getElementById('modal-meta').innerHTML = meta.join('') || '';
 
   // Description body
   let embeds = {};
@@ -1450,43 +1484,9 @@ async function openJob(job, options = {}) {
   }
 
   document.getElementById('modal-body').innerHTML = body;
-  // Initial sidebar — skeleton form
-  renderSidebar(job, null);
+  renderSidebar(job, details);
 
   document.getElementById('modal').classList.add('open');
-
-  // Fetch position for enriched data
-  if (job.position_id) {
-    try {
-      const r = await fetch(`${API}/positions/${job.position_id}`).then(r => r.json());
-      if (r.success) {
-        currentPosition = r.data;
-        const p = r.data;
-
-        // Update badge row — prepend category
-        if (p.category) {
-          document.getElementById('modal-badges').innerHTML =
-            `<span class="badge badge-category">${escHtml(p.category)}</span>` +
-            document.getElementById('modal-badges').innerHTML;
-        }
-
-        // Update meta row
-        const meta = [];
-        if (p.location)   meta.push(`<div class="meta-item">📍 <span>${escHtml(p.location)}</span></div>`);
-        if (p.job_type)   meta.push(`<div class="meta-item">💼 <span>${escHtml(p.job_type)}</span></div>`);
-        if (p.scope)      meta.push(`<div class="meta-item">⏰ <span>${escHtml(p.scope)}</span></div>`);
-        if (p.internal_salary) meta.push(`<div class="meta-item">💰 <span>${escHtml(p.internal_salary)}</span></div>`);
-        document.getElementById('modal-meta').innerHTML = meta.join('') || '';
-
-        // Re-render sidebar with full position data
-        renderSidebar(job, p);
-      }
-    } catch(e) {
-      document.getElementById('modal-meta').innerHTML = '';
-    }
-  } else {
-    document.getElementById('modal-meta').innerHTML = '';
-  }
 }
 
 // ── Sidebar renderer ────────────────────────────────────
@@ -1524,9 +1524,9 @@ function renderSidebar(job, position) {
           <span class="cv-upload-icon">📎</span>
           <div class="cv-upload-label" id="cv-label">
             לחץ לבחירת קובץ או גרור לכאן<br>
-            <span style="font-size:11px;color:#9ca3af">PDF או DOC עד 4MB</span>
+            <span style="font-size:11px;color:#9ca3af">PDF, DOC או DOCX עד 4MB</span>
           </div>
-          <input type="file" id="cv-file" accept=".pdf,.doc" onchange="handleCvSelect(event)">
+          <input type="file" id="cv-file" accept=".pdf,.doc,.docx" onchange="handleCvSelect(event)">
         </div>
       </div>
     `;
@@ -1572,7 +1572,7 @@ function handleCvSelect(e) {
 function validateResumeFile(file) {
   if (!file) return 'נא לצרף קורות חיים';
   const ext = file.name.split('.').pop()?.toLowerCase();
-  if (!['pdf', 'doc'].includes(ext)) return 'ניתן להעלות רק קובץ PDF או DOC';
+  if (!['pdf', 'doc', 'docx'].includes(ext)) return 'ניתן להעלות רק קובץ PDF, DOC או DOCX';
   if (file.size > 4 * 1024 * 1024) return 'גודל הקובץ המקסימלי הוא 4MB';
   return '';
 }
@@ -1685,12 +1685,8 @@ function showApplyError(msg) {
 async function showComparison() {
   if (!currentJob?.position_id) return;
 
-  let pos = currentPosition;
-  if (!pos) {
-    const r = await fetch(`${API}/positions/${currentJob.position_id}`).then(r => r.json());
-    if (!r.success) { alert('לא ניתן לטעון את הנתונים המקוריים'); return; }
-    pos = r.data;
-  }
+  const pos = currentPosition || getCachedJobDetails(currentJob);
+  if (!pos) { alert('לא ניתן לטעון את הנתונים המקוריים'); return; }
 
   document.getElementById('comparison-body').innerHTML = `
     <div class="comparison">
