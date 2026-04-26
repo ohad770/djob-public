@@ -282,6 +282,153 @@
     color: var(--gray-600);
   }
 
+  .job-loader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at top, rgba(255,255,255,0.92), rgba(239,248,246,0.98)),
+      linear-gradient(135deg, #eff9f7 0%, #fff8ec 100%);
+    transition: opacity .45s ease, visibility .45s ease;
+  }
+
+  .job-loader-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .job-loader-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    text-align: center;
+  }
+
+  .job-loader-mark {
+    position: relative;
+    width: 220px;
+    height: 165px;
+    border-radius: 0 110px 110px 0;
+    background: linear-gradient(145deg, #14525a 0%, #0f5a60 58%, #0d4750 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 24px 55px rgba(15, 90, 96, 0.18);
+    animation: loader-float 2.8s ease-in-out infinite;
+    overflow: visible;
+  }
+
+  .job-loader-mark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(140deg, rgba(255,255,255,0.2), rgba(255,255,255,0) 38%);
+  }
+
+  .job-loader-mark::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 12px;
+    width: 250px;
+    height: 250px;
+    background: linear-gradient(135deg, rgba(15, 90, 96, 0.22), rgba(15, 90, 96, 0));
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    filter: blur(8px);
+    opacity: 0.8;
+    transform-origin: top right;
+    animation: loader-shadow 2.8s ease-in-out infinite;
+  }
+
+  .job-loader-echo {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.18);
+    animation: loader-echo 2.8s ease-out infinite;
+  }
+
+  .job-loader-text {
+    position: relative;
+    z-index: 2;
+    color: #f8fafc;
+    font-size: 62px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    line-height: 1;
+  }
+
+  .job-loader-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .job-loader-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #164e63;
+  }
+
+  .job-loader-subtitle {
+    font-size: 14px;
+    color: var(--gray-500);
+  }
+
+  .job-loader-dots {
+    display: inline-flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .job-loader-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #0f5a60;
+    animation: loader-dot 1.2s ease-in-out infinite;
+  }
+
+  .job-loader-dot:nth-child(2) { animation-delay: 0.16s; }
+  .job-loader-dot:nth-child(3) { animation-delay: 0.32s; }
+
+  @keyframes loader-float {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(0, -8px, 0) scale(1.015); }
+  }
+
+  @keyframes loader-shadow {
+    0%, 100% { transform: skewX(0deg) scale(1); opacity: 0.75; }
+    50% { transform: translate3d(10px, 8px, 0) scale(1.03); opacity: 0.58; }
+  }
+
+  @keyframes loader-echo {
+    0% { box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.16); opacity: 0.95; }
+    70% { box-shadow: 0 0 0 18px rgba(8, 145, 178, 0); opacity: 0.2; }
+    100% { box-shadow: 0 0 0 0 rgba(8, 145, 178, 0); opacity: 0; }
+  }
+
+  @keyframes loader-dot {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .job-loader-mark,
+    .job-loader-mark::after,
+    .job-loader-echo,
+    .job-loader-dot {
+      animation: none;
+    }
+  }
+
   @media (max-width: 960px) {
     .modal {
       grid-template-columns: 1fr;
@@ -294,6 +441,23 @@
 </style>
 </head>
 <body>
+  <div class="job-loader-overlay" id="job-loader-overlay" aria-live="polite" aria-label="טוען משרה">
+    <div class="job-loader-inner">
+      <div class="job-loader-mark" aria-hidden="true">
+        <div class="job-loader-echo"></div>
+        <div class="job-loader-text">JOB</div>
+      </div>
+      <div class="job-loader-copy">
+        <div class="job-loader-title">מעלים את המשרה</div>
+        <div class="job-loader-subtitle">רק עוד רגע ואנחנו בפנים</div>
+        <div class="job-loader-dots" aria-hidden="true">
+          <span class="job-loader-dot"></span>
+          <span class="job-loader-dot"></span>
+          <span class="job-loader-dot"></span>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="modal-page">
     <div class="modal" id="job-shell">
       <div class="modal-main">
@@ -322,6 +486,8 @@ const params = new URLSearchParams(window.location.search);
 const jobNumber = params.get('n');
 const noResumeMode = params.get('noresume') === 'true';
 let currentJob = null;
+const loaderShownAt = Date.now();
+let loaderHidden = false;
 const shareButton = document.getElementById('share-btn');
 
 if (shareButton) {
@@ -368,6 +534,7 @@ function splitField(val) {
 }
 
 function renderError(message) {
+  hideJobLoader();
   document.getElementById('job-shell').innerHTML = `
     <div class="modal-main empty-state">
       <h1 style="font-size:32px;margin-bottom:12px">לא ניתן לטעון את המשרה</h1>
@@ -377,6 +544,18 @@ function renderError(message) {
       <a class="btn btn-outline" href="/">חזרה לעמוד הבית</a>
     </div>
   `;
+}
+
+function hideJobLoader() {
+  if (loaderHidden) return;
+  loaderHidden = true;
+  const loaderEl = document.getElementById('job-loader-overlay');
+  if (!loaderEl) return;
+  const elapsed = Date.now() - loaderShownAt;
+  const waitMs = Math.max(0, 800 - elapsed);
+  window.setTimeout(() => {
+    loaderEl.classList.add('hidden');
+  }, waitMs);
 }
 
 function renderJob(job) {
@@ -424,6 +603,7 @@ function renderJob(job) {
   `;
 
   renderSidebar(job);
+  hideJobLoader();
 }
 
 function buildScreeningQuestions(job) {
