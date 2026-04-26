@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הגש מועמדות</title>
+<style>
+  :root {
+    --cyan: #0891b2;
+    --cyan-dark: #0e7490;
+    --amber: #d97706;
+    --gray-400: #9ca3af;
+    --gray-900: #111827;
+    --gray-700: #374151;
+    --gray-600: #4b5563;
+    --gray-500: #6b7280;
+    --gray-300: #d1d5db;
+    --gray-200: #e5e7eb;
+    --gray-100: #f3f4f6;
+    --gray-50: #f8fafc;
+    --success-bg: #eefbf3;
+    --success-border: #9ae6b4;
+    --success-text: #166534;
+    --error-bg: #fef2f2;
+    --error-border: #fca5a5;
+    --error-text: #991b1b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(to bottom right, var(--gray-50), #fef3c7);
+    color: var(--gray-900);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .modal-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .modal {
+    background: white;
+    border-radius: 16px;
+    width: 1000px;
+    max-width: 95vw;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    display: grid;
+    grid-template-columns: 1fr 350px;
+  }
+
+  .modal-main {
+    padding: 32px;
+    height: 100%;
+  }
+
+  .modal-sidebar {
+    background: #f9fafb;
+    border-left: 1px solid #e5e7eb;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    height: 100%;
+  }
+
+  .modal-header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .modal-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .modal h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 12px;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-section {
+    margin-bottom: 28px;
+  }
+
+  .modal-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .modal-section p {
+    font-size: 15px;
+    color: var(--gray-700);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .questions-section {
+    margin-top: 32px;
+  }
+
+  .question-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-right: 4px solid var(--gray-300);
+  }
+
+  .question-item.required {
+    border-right-color: #dc2626;
+    background: #fee2e2;
+    border-right-width: 6px;
+  }
+
+  .question-item.optional {
+    border-right-color: #6b7280;
+  }
+
+  .question-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .question-label.required {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .question-label.optional {
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+
+  .question-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+    line-height: 1.6;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--gray-300);
+    color: var(--gray-700);
+  }
+
+  .btn-outline:hover {
+    background: var(--gray-100);
+  }
+
+  .btn-primary {
+    background: var(--cyan);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--cyan-dark);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .badge-hot   { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+  .badge-quick { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+  .badge-sticky { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+  .badge-job-num { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-family: monospace; }
+  .badge-category { background: #ecfeff; color: #155e75; border: 1px solid #a5f3fc; }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; color: var(--gray-600); font-size: 14px; margin-top: 12px; }
+  .meta-item { display: flex; align-items: center; gap: 5px; }
+  .meta-item strong { color: var(--gray-900); }
+
+  .apply-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .apply-card-title { font-size: 16px; font-weight: 700; color: var(--gray-900); padding-bottom: 12px; border-bottom: 1px solid #f3f4f6; margin: 0; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--gray-600); }
+  .form-required { color: #ef4444; margin-right: 2px; }
+  .form-input { border: 1px solid #e5e7eb; border-radius: 8px; padding: 9px 12px; font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s; font-family: inherit; width: 100%; background: white; }
+  .form-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(8,145,178,.1); }
+  textarea.form-input { resize: vertical; min-height: 70px; }
+  .inline-note { background:#fef3c7;color:#92400e;font-size:12px;padding:0 4px;display:inline;border-radius:3px; }
+
+  .cv-upload-zone { border: 2px dashed #d1d5db; border-radius: 10px; padding: 18px 14px; text-align: center; cursor: pointer; transition: all .2s; user-select: none; }
+  .cv-upload-zone:hover, .cv-upload-zone.drag-over { border-color: var(--cyan); background: #f0fdff; }
+  .cv-upload-zone.has-file { border-color: #10b981; background: #f0fdf4; }
+  .cv-upload-zone input[type=file] { display: none; }
+  .cv-upload-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+  .cv-upload-label { font-size: 12px; color: var(--gray-500); line-height: 1.6; }
+  .cv-upload-filename { font-size: 12px; color: #10b981; font-weight: 600; }
+
+  .form-alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; align-items: flex-start; gap: 8px; }
+  .form-alert.show { display: flex; }
+  .form-alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  .form-alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+  .info-card { background: var(--gray-50); border-radius: 10px; border: 1px solid #e5e7eb; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .info-card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-500); margin-bottom: 2px; }
+  .info-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-700); }
+  .info-row strong { color: var(--gray-900); font-weight: 600; }
+
+  .page-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .share-btn {
+    color: var(--cyan-dark);
+    border-color: #a5f3fc;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 16px;
+  }
+
+  .resume-notice {
+    background: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .notice {
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .loading, .empty-state {
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--gray-600);
+  }
+
+  @media (max-width: 960px) {
+    .modal {
+      grid-template-columns: 1fr;
+      width: 95vw;
+    }
+
+    .modal-main { padding: 20px; }
+    .modal-sidebar { border-left: none; border-top: 1px solid #e5e7eb; }
+  }
+</style>
+</head>
+<body>
+  <div class="modal-page">
+    <div class="modal" id="job-shell">
+      <div class="modal-main">
+        <div class="page-actions">
+          <button class="btn btn-outline share-btn" id="share-btn" type="button">שיתוף</button>
+          <a class="btn btn-outline" href="/">חזרה לכל המשרות</a>
+        </div>
+        <div class="modal-header">
+          <div class="modal-badges" id="modal-badges"></div>
+          <h2 id="modal-title">טוען משרה...</h2>
+          <div class="meta-row" id="modal-meta"></div>
+        </div>
+        <div id="modal-body">
+          <div class="loading">טוען משרה...</div>
+        </div>
+      </div>
+      <div class="modal-sidebar" id="modal-sidebar">
+        <div class="loading">טוען טופס...</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API = `${window.location.origin}/api`;
+const params = new URLSearchParams(window.location.search);
+const jobNumber = params.get('n');
+const noResumeMode = params.get('noresume') === 'true';
+let currentJob = null;
+const shareButton = document.getElementById('share-btn');
+
+if (shareButton) {
+  shareButton.addEventListener('click', async () => {
+    const shareData = {
+      title: document.title,
+      text: currentJob?.title || 'משרה',
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        shareButton.textContent = 'הקישור הועתק';
+        setTimeout(() => {
+          shareButton.textContent = 'שיתוף';
+        }, 1500);
+      }
+    } catch (error) {
+      // User cancelled or share unavailable; keep the UI unchanged.
+    }
+  });
+}
+
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function splitField(val) {
+  if (!val) return [];
+  try {
+    const parsed = JSON.parse(val);
+    return Array.isArray(parsed) ? parsed.map(v => String(v).trim()).filter(Boolean) : [String(parsed).trim()];
+  } catch (error) {
+    return String(val).split(',').map(v => v.trim()).filter(Boolean);
+  }
+}
+
+function renderError(message) {
+  document.getElementById('job-shell').innerHTML = `
+    <div class="modal-main empty-state">
+      <h1 style="font-size:32px;margin-bottom:12px">לא ניתן לטעון את המשרה</h1>
+      <p>${escHtml(message)}</p>
+    </div>
+    <div class="modal-sidebar empty-state">
+      <a class="btn btn-outline" href="/">חזרה לעמוד הבית</a>
+    </div>
+  `;
+}
+
+function renderJob(job) {
+  currentJob = job;
+  document.title = `${job.title} | הגש מועמדות`;
+
+  let embeds = {};
+  try {
+    embeds = job.embedding_statements ? JSON.parse(job.embedding_statements) : {};
+  } catch (error) {}
+
+  const badges = [];
+  if (job.category) badges.push(`<span class="badge badge-category">${escHtml(job.category)}</span>`);
+  if (job.job_number) badges.push(`<span class="badge badge-job-num">#${escHtml(job.job_number)}</span>`);
+  if (job.is_hot) badges.push('<span class="badge badge-hot">🔥 חם</span>');
+  if (job.is_sticky) badges.push('<span class="badge badge-sticky">📌 מובטח</span>');
+
+  const meta = [];
+  if (job.location) meta.push(`<div class="meta-item">📍 <span>${escHtml(job.location)}</span></div>`);
+  if (job.job_type) meta.push(`<div class="meta-item">💼 <span>${escHtml(job.job_type)}</span></div>`);
+  if (job.scope) meta.push(`<div class="meta-item">⏰ <span>${escHtml(job.scope)}</span></div>`);
+  if (job.internal_salary) meta.push(`<div class="meta-item">💰 <span>${escHtml(job.internal_salary)}</span></div>`);
+
+  let requirementsHtml = '';
+  if (embeds.required?.length > 0) {
+    requirementsHtml += `
+      <div class="modal-section">
+        <h3>דרישות חובה</h3>
+        <div class="questions-section">
+          ${embeds.required.map(item => {
+            const timeText = item.minTimeMonths
+              ? ` <span style="color:#6b7280;font-size:12px">(${item.minTimeMonths}${item.maxTimeMonths ? '-' + item.maxTimeMonths : '+'} חודשים)</span>`
+              : '';
+            return `
+              <div class="question-item required">
+                <div class="question-label required">⭐ חובה</div>
+                <div class="question-text">${escHtml(item.text || '')}${timeText}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (embeds.optional?.length > 0) {
+    requirementsHtml += `
+      <div class="modal-section">
+        <h3>דרישות יתרון</h3>
+        <div class="questions-section">
+          ${embeds.optional.map(item => `
+            <div class="question-item optional">
+              <div class="question-label optional">✓ יתרון</div>
+              <div class="question-text">${escHtml(item.text || '')}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (embeds.validThrough) {
+    requirementsHtml += `
+      <div class="modal-section">
+        <div class="notice" style="margin:0;background:#fffbeb;border:1px solid #fde68a;color:#92400e">
+          ⏳ תוקף המשרה עד <strong>${escHtml(embeds.validThrough)}</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('modal-badges').innerHTML = badges.join('');
+  document.getElementById('modal-title').innerHTML = `${escHtml(job.title)}${job.is_hot ? ' <span style="color:#f97316">🔥</span>' : ''}`;
+  document.getElementById('modal-meta').innerHTML = meta.join('');
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-section">
+      <h3>תיאור המשרה</h3>
+      <div style="font-size:15px;color:var(--gray-700);line-height:1.85;white-space:pre-wrap;">${escHtml(job.description || '–')}</div>
+    </div>
+    ${requirementsHtml}
+  `;
+
+  renderSidebar(job);
+}
+
+function buildScreeningQuestions(job) {
+  if (!job.screening_questions) return '';
+  let questions = [];
+  try {
+    questions = JSON.parse(job.screening_questions);
+  } catch (error) {}
+
+  if (!Array.isArray(questions) || questions.length === 0) return '';
+
+  return questions.map((question, index) => {
+    const text = typeof question === 'string' ? question : (question.text || '');
+    const required = typeof question === 'object' ? question.required !== false : true;
+    return `
+      <div class="form-group">
+        <label class="form-label">
+          ${escHtml(text)}
+          ${required ? '<span class="inline-note">דרישת חובה למשרה</span>' : ''}
+          <span class="form-required">*</span>
+        </label>
+        <textarea class="form-input screening-answer" rows="2" data-question-index="${index}" placeholder="תשובתך..."></textarea>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSidebar(job) {
+  const screeningQuestionsHtml = buildScreeningQuestions(job);
+  const noResumeNotice = noResumeMode ? `
+    <div class="resume-notice">
+      ✓ קורות החיים שלך נמצאים במערכת - אין צורך להעלות קורות חיים
+    </div>
+  ` : '';
+  const uploadSection = noResumeMode ? '' : `
+    <div class="form-group">
+      <label class="form-label">קורות חיים<span class="form-required">*</span></label>
+      <div class="cv-upload-zone" id="cv-zone"
+        onclick="document.getElementById('cv-file').click()"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleCvDrop(event)">
+        <span class="cv-upload-icon">📎</span>
+        <div class="cv-upload-label" id="cv-label">
+          לחץ לבחירת קובץ או גרור לכאן<br>
+          <span style="font-size:11px;color:#6b7280">PDF או DOC עד 5MB</span>
+        </div>
+        <input type="file" id="cv-file" accept=".pdf,.doc" onchange="handleCvSelect(event)">
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-sidebar').innerHTML = `
+    <div class="apply-card">
+      <div class="apply-card-title">הגש מועמדות</div>
+
+      ${noResumeNotice}
+
+      <div class="form-group">
+        <label class="form-label">שם מלא <span class="form-required">*</span></label>
+        <input type="text" class="form-input" id="apply-name" placeholder="ישראל ישראלי">
+      </div>
+      <div class="form-group">
+        <label class="form-label">אימייל <span class="form-required">*</span></label>
+        <input type="email" class="form-input" id="apply-email" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">טלפון <span class="form-required">*</span></label>
+        <input type="tel" class="form-input" id="apply-phone" placeholder="050-0000000">
+      </div>
+
+      ${screeningQuestionsHtml}
+      ${uploadSection}
+
+      <div class="form-alert form-alert-error" id="apply-error">⚠️ <span id="apply-error-text"></span></div>
+      <div class="form-alert form-alert-success" id="apply-success">✅ <span id="apply-success-text"></span></div>
+
+      <button class="btn btn-primary" id="apply-btn" onclick="submitApplication()">שלח מועמדות →</button>
+    </div>
+  `;
+}
+
+function showApplyError(message) {
+  const errorEl = document.getElementById('apply-error');
+  const errorText = document.getElementById('apply-error-text');
+  const successEl = document.getElementById('apply-success');
+  if (successEl) successEl.classList.remove('show');
+  if (errorText) errorText.textContent = message;
+  if (errorEl) errorEl.classList.add('show');
+}
+
+function showApplySuccess(message) {
+  const errorEl = document.getElementById('apply-error');
+  const successEl = document.getElementById('apply-success');
+  const successText = document.getElementById('apply-success-text');
+  if (errorEl) errorEl.classList.remove('show');
+  if (successText) successText.textContent = message;
+  if (successEl) successEl.classList.add('show');
+}
+
+function validateResumeFile(file) {
+  if (!file) return 'נא לצרף קורות חיים';
+  const allowedExtensions = ['pdf', 'doc'];
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  if (!allowedExtensions.includes(ext)) {
+    return 'ניתן להעלות רק קובץ PDF או DOC';
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return 'גודל הקובץ המקסימלי הוא 5MB';
+  }
+  return '';
+}
+
+function setCvFile(file) {
+  const zone = document.getElementById('cv-zone');
+  const label = document.getElementById('cv-label');
+  if (!zone || !label) return;
+  const fileError = validateResumeFile(file);
+  if (fileError) {
+    showApplyError(fileError);
+    return;
+  }
+  zone.classList.add('has-file');
+  label.innerHTML = `<span class="cv-upload-filename">📄 ${escHtml(file.name)}</span><br><span style="font-size:11px;color:#6b7280">${Math.round(file.size / 1024)} KB</span>`;
+}
+
+function handleCvSelect(event) {
+  const file = event.target.files[0];
+  if (file) setCvFile(file);
+}
+
+function handleCvDrop(event) {
+  event.preventDefault();
+  const zone = document.getElementById('cv-zone');
+  if (zone) zone.classList.remove('drag-over');
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  const fileError = validateResumeFile(file);
+  if (fileError) {
+    showApplyError(fileError);
+    return;
+  }
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  document.getElementById('cv-file').files = dataTransfer.files;
+  setCvFile(file);
+}
+
+async function submitApplication() {
+  if (!currentJob) return;
+
+  const fullName = document.getElementById('apply-name')?.value.trim();
+  const email = document.getElementById('apply-email')?.value.trim();
+  const phone = document.getElementById('apply-phone')?.value.trim();
+  const cvFile = document.getElementById('cv-file')?.files?.[0];
+  const answers = Array.from(document.querySelectorAll('.screening-answer')).map(input => ({
+    index: Number(input.dataset.questionIndex),
+    answer: input.value.trim(),
+  }));
+
+  if (!fullName) return showApplyError('נא למלא שם מלא');
+  if (!email || !email.includes('@')) return showApplyError('נא למלא כתובת אימייל תקינה');
+  if (!phone) return showApplyError('נא למלא מספר טלפון');
+  if (answers.some(item => !item.answer)) return showApplyError('נא למלא את כל השאלות');
+
+  if (!noResumeMode) {
+    const fileError = validateResumeFile(cvFile);
+    if (fileError) return showApplyError(fileError);
+  }
+
+  const button = document.getElementById('apply-btn');
+  button.disabled = true;
+  button.textContent = '⏳ שולח...';
+
+  try {
+    const formData = new FormData();
+    formData.append('job_uuid', currentJob.uuid);
+    formData.append('job_number', currentJob.job_number);
+    formData.append('position_id', currentJob.position_id || '');
+    formData.append('full_name', fullName);
+    formData.append('email', email);
+    formData.append('phone', phone);
+    formData.append('screening_answers', JSON.stringify(answers));
+    formData.append('noresume', noResumeMode ? 'true' : 'false');
+
+    if (!noResumeMode && cvFile) {
+      formData.append('cv', cvFile);
+    }
+
+    const response = await fetch(`${API}/applications`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'שליחת המועמדות נכשלה');
+    }
+
+    showApplySuccess('מועמדותך התקבלה בהצלחה! נחזור אליך בהקדם.');
+    button.textContent = 'נשלח בהצלחה ✓';
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = 'שלח מועמדות →';
+    showApplyError(error.message || 'שליחת המועמדות נכשלה');
+  }
+}
+
+async function loadJob() {
+  if (!jobNumber) {
+    renderError('חסר פרמטר n בכתובת המשרה.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API}/jobs/by-number/${encodeURIComponent(jobNumber)}`);
+    const result = await response.json();
+    if (!response.ok || !result.success || !result.data) {
+      throw new Error(result.message || 'המשרה לא נמצאה');
+    }
+    renderJob(result.data);
+  } catch (error) {
+    renderError(error.message || 'המשרה לא נמצאה');
+  }
+}
+
+loadJob();
+</script>
+</body>
+</html>
