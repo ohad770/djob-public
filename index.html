@@ -1420,8 +1420,18 @@ function filterJobs() {
 
   const filtered = allJobs.filter(j => {
     // Search filter
-    const matchesSearch = (j.title || '').toLowerCase().includes(search) ||
-                          (j.description || '').toLowerCase().includes(search);
+    const searchHaystack = [
+      j.title || '',
+      j.description || '',
+      j.job_number || '',
+      j.position_id || '',
+      j.category || '',
+      j.location || '',
+      j.job_type || '',
+      j.scope || '',
+      j.job_role || '',
+    ].join(' ').toLowerCase();
+    const matchesSearch = searchHaystack.includes(search);
 
     // Category filter - if categories selected, job must match at least one
     const jobCategories = splitField(j.category);
@@ -1473,9 +1483,9 @@ function filterJobs() {
     }
 
     // ── Dates ──
-    const createdFmt = fmtDate(j.created_at);
+    const publishedFmt = fmtDate(j.publish_date || j.created_at);
     const updatedFmt = fmtDate(j.updated_at);
-    const showUpdated = j.show_updated_date !== 0 && updatedFmt && updatedFmt !== createdFmt;
+    const showUpdated = j.show_updated_date !== 0 && updatedFmt && updatedFmt !== publishedFmt;
 
     // ── Employment / Salary ──
     const empType  = j.job_type  ? `<span class="badge" style="font-size:11px;background:#f0f9ff;color:#0c4a6e">${escHtml(j.job_type)}</span>` : '';
@@ -1519,7 +1529,7 @@ function filterJobs() {
         </div>
 
         <div class="card-dates">
-          ${createdFmt ? `<span>פורסם: ${createdFmt}</span>` : ''}
+          ${publishedFmt ? `<span>פורסם: ${publishedFmt}</span>` : ''}
           ${showUpdated ? `<span>עודכן: ${updatedFmt}</span>` : ''}
         </div>
 
@@ -1569,6 +1579,7 @@ async function openJob(job, options = {}) {
   const meta = [];
   if (details?.location)   meta.push(`<div class="meta-item">📍 <span>${escHtml(details.location)}</span></div>`);
   if (details?.job_type)   meta.push(`<div class="meta-item">💼 <span>${escHtml(details.job_type)}</span></div>`);
+  if (details?.job_role)   meta.push(`<div class="meta-item">🧩 <span>${escHtml(details.job_role)}</span></div>`);
   if (details?.scope)      meta.push(`<div class="meta-item">⏰ <span>${escHtml(details.scope)}</span></div>`);
   if (details?.internal_salary) meta.push(`<div class="meta-item">💰 <span>${escHtml(details.internal_salary)}</span></div>`);
   document.getElementById('modal-meta').innerHTML = meta.join('') || '';

@@ -591,6 +591,7 @@ function renderJob(job) {
   const meta = [];
   if (job.location) meta.push(`<div class="meta-item">📍 <span>${escHtml(job.location)}</span></div>`);
   if (job.job_type) meta.push(`<div class="meta-item">💼 <span>${escHtml(job.job_type)}</span></div>`);
+  if (job.job_role) meta.push(`<div class="meta-item">🧩 <span>${escHtml(job.job_role)}</span></div>`);
   if (job.scope) meta.push(`<div class="meta-item">⏰ <span>${escHtml(job.scope)}</span></div>`);
   if (job.internal_salary) meta.push(`<div class="meta-item">💰 <span>${escHtml(job.internal_salary)}</span></div>`);
 
