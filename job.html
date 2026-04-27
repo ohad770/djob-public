@@ -424,6 +424,48 @@
     }
   }
 
+  .scroll-top-btn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+    color: white;
+    box-shadow: 0 18px 30px rgba(8, 145, 178, 0.24);
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(14px) scale(0.92);
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease;
+    z-index: 90;
+  }
+
+  .scroll-top-btn:hover {
+    box-shadow: 0 24px 36px rgba(8, 145, 178, 0.28);
+    transform: translateY(-2px) scale(1);
+  }
+
+  .scroll-top-btn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .scroll-top-btn:focus-visible {
+    outline: 3px solid rgba(255,255,255,0.85);
+    outline-offset: 3px;
+  }
+
   @media (max-width: 960px) {
     .modal {
       grid-template-columns: 1fr;
@@ -432,6 +474,28 @@
 
     .modal-main { padding: 20px; }
     .modal-sidebar { border-left: none; border-top: 1px solid #e5e7eb; }
+  }
+
+  @media (max-width: 640px) {
+    .scroll-top-btn {
+      right: 16px;
+      bottom: 16px;
+      width: 52px;
+      height: 52px;
+      font-size: 22px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-top-btn {
+      transition: opacity 0.15s ease, visibility 0.15s ease;
+      transform: none;
+    }
+
+    .scroll-top-btn:hover,
+    .scroll-top-btn.is-visible {
+      transform: none;
+    }
   }
 </style>
 </head>
@@ -475,6 +539,16 @@
     </div>
   </div>
 
+  <button
+    id="scroll-top-btn"
+    class="scroll-top-btn"
+    type="button"
+    aria-label="חזרה לראש העמוד"
+    title="חזרה לראש העמוד"
+  >
+    ↑
+  </button>
+
 <script>
 const API = `${window.location.origin}/api`;
 const params = new URLSearchParams(window.location.search);
@@ -484,6 +558,7 @@ let currentJob = null;
 let loaderShownAt = Date.now();
 let loaderHideTimer = null;
 let pendingCvPickerSync = false;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const shareButton = document.getElementById('share-btn');
 
 if (shareButton) {
@@ -764,6 +839,25 @@ function syncCvUiFromInput() {
   }
 }
 
+function setupScrollTopButton() {
+  const button = document.getElementById('scroll-top-btn');
+  if (!button) return;
+
+  const updateVisibility = () => {
+    button.classList.toggle('is-visible', window.scrollY > 280);
+  };
+
+  button.addEventListener('click', () => {
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
+  });
+
+  window.addEventListener('scroll', updateVisibility, { passive: true });
+  updateVisibility();
+}
+
 function openCvPicker() {
   const input = document.getElementById('cv-file');
   if (!input) return;
@@ -892,6 +986,7 @@ async function loadJob() {
 }
 
 loadJob();
+setupScrollTopButton();
 </script>
 </body>
 </html>
