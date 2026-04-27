@@ -1486,10 +1486,10 @@ function filterJobs() {
     if (!isActive) {
       cta = `<button class="btn btn-cta-disabled" disabled aria-disabled="true">⛔ משרה לא פעילה</button>`;
     } else if (j.is_quick_apply) {
-      cta = `<button class="btn btn-cta-quick" type="button" onclick='event.stopPropagation();openJob(${jobRef}, { noresume: true })'
+      cta = `<button class="btn btn-cta-quick" type="button" onclick="event.stopPropagation();openJob(${jobRef}, { noresume: true })"
                aria-label="הגשה מהירה למשרה ${escHtml(j.title)}">⚡ הגשה מהירה ללא קו"ח</button>`;
     } else {
-      cta = `<button class="btn btn-cta-external" type="button" onclick='event.stopPropagation();openJob(${jobRef})'
+      cta = `<button class="btn btn-cta-external" type="button" onclick="event.stopPropagation();openJob(${jobRef})"
                aria-label="הגשת מועמדות למשרה ${escHtml(j.title)}">הגש מועמדות ↗</button>`;
     }
 
