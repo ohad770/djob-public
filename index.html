@@ -166,11 +166,13 @@
 
   .search-icon {
     position: absolute;
-    left: 16px;
+    right: 16px;
+    left: auto;
     top: 50%;
     transform: translateY(-50%);
     color: var(--gray-400);
     font-size: 18px;
+    pointer-events: none;
   }
 
   /* Filter Bar */
@@ -293,7 +295,7 @@
 
   .ms-search {
     width: 100%;
-    padding: 8px 12px 8px 32px;
+    padding: 8px 32px 8px 12px;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     font-size: 13px;
@@ -307,7 +309,8 @@
 
   .ms-search-icon {
     position: absolute;
-    left: 22px;
+    right: 22px;
+    left: auto;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
