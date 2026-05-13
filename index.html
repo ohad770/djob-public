@@ -4,15 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>מצא את המשרה שלך | משרות פתוחות</title>
-<script>
-  try {
-    const raw = localStorage.getItem('djobPublicJobsCacheV1');
-    const parsed = raw ? JSON.parse(raw) : null;
-    if (parsed && Array.isArray(parsed.jobs) && parsed.jobs.length > 0) {
-      document.documentElement.classList.add('has-jobs-cache');
-    }
-  } catch (error) {}
-</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -529,10 +520,40 @@
   .badge-status-inactive { background: #fee2e2; color: #991b1b; }
 
   /* Empty State */
-  .empty {
+  .empty,
+  .jobs-loading {
     text-align: center;
     padding: 80px 32px;
     grid-column: 1 / -1;
+  }
+
+  .jobs-loading {
+    color: var(--gray-600);
+  }
+
+  .jobs-loading-spinner {
+    width: 38px;
+    height: 38px;
+    border: 4px solid #cffafe;
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    margin: 0 auto 18px;
+    animation: spin 0.85s linear infinite;
+  }
+
+  .jobs-loading h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+  }
+
+  .jobs-loading p {
+    color: var(--gray-500);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   .empty-icon {
@@ -565,12 +586,6 @@
   }
 
   .job-loader-overlay.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  html.has-jobs-cache .job-loader-overlay {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -1284,10 +1299,10 @@
 
   <!-- Jobs Grid -->
   <div class="jobs-grid" id="jobs-grid">
-    <div class="empty">
-      <div class="empty-icon">📭</div>
-      <h3>אין משרות בעת זו</h3>
-      <p>נסה שוב בעוד מעט</p>
+    <div class="jobs-loading" role="status" aria-live="polite">
+      <div class="jobs-loading-spinner"></div>
+      <h3>טוען משרות...</h3>
+      <p>מביא את הרשימה המעודכנת</p>
     </div>
   </div>
 </div>
@@ -1354,11 +1369,22 @@ const API = `${window.location.origin}/api`;
 let allJobs = [];
 const jobCacheByPositionId = new Map();
 const jobCacheByJobNumber = new Map();
-const JOBS_CACHE_KEY = 'djobPublicJobsCacheV1';
-const JOBS_CACHE_MAX_AGE_MS = 1000 * 60 * 15;
 let loaderShownAt = Date.now();
 let loaderHideTimer = null;
+let jobsLoading = false;
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function showJobLoader() {
+  const loaderEl = document.getElementById('job-loader-overlay');
+  loaderShownAt = Date.now();
+  if (loaderHideTimer) {
+    window.clearTimeout(loaderHideTimer);
+    loaderHideTimer = null;
+  }
+  if (loaderEl) {
+    loaderEl.classList.remove('hidden');
+  }
+}
 
 function hideJobLoader(immediate = false) {
   const loaderEl = document.getElementById('job-loader-overlay');
@@ -1374,67 +1400,59 @@ function hideJobLoader(immediate = false) {
   }, waitMs);
 }
 
-function readJobsCache() {
-  try {
-    const raw = localStorage.getItem(JOBS_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.jobs)) return null;
-    return {
-      jobs: parsed.jobs,
-      cachedAt: Number(parsed.cachedAt || 0),
-    };
-  } catch (error) {
-    return null;
-  }
-}
-
-function writeJobsCache(jobs) {
-  try {
-    localStorage.setItem(JOBS_CACHE_KEY, JSON.stringify({
-      cachedAt: Date.now(),
-      jobs: Array.isArray(jobs) ? jobs : [],
-    }));
-    syncFilterOptionsCacheFromJobs(jobs);
-  } catch (error) {
-    // Ignore storage quota / privacy mode issues and continue with live data.
+function renderJobsLoading() {
+  jobsLoading = true;
+  allJobs = [];
+  primeJobCache([]);
+  const statsEl = document.getElementById('stats-text');
+  const grid = document.getElementById('jobs-grid');
+  if (statsEl) statsEl.textContent = 'טוען משרות...';
+  if (grid) {
+    grid.innerHTML = `
+      <div class="jobs-loading" role="status" aria-live="polite">
+        <div class="jobs-loading-spinner"></div>
+        <h3>טוען משרות...</h3>
+        <p>מביא את הרשימה המעודכנת</p>
+      </div>
+    `;
   }
 }
 
 function renderJobsFromSource(jobs) {
+  jobsLoading = false;
   allJobs = Array.isArray(jobs) ? jobs : [];
   primeJobCache(allJobs);
   document.getElementById('stats-text').textContent = `נמצאו ${allJobs.length} משרות`;
   filterJobs();
 }
 
-async function loadJobs() {
-  const cached = readJobsCache();
-  if (cached?.jobs?.length) {
-    renderJobsFromSource(cached.jobs);
-    hideJobLoader(true);
+function renderJobsLoadError() {
+  jobsLoading = false;
+  allJobs = [];
+  primeJobCache([]);
+  const statsEl = document.getElementById('stats-text');
+  const grid = document.getElementById('jobs-grid');
+  if (statsEl) statsEl.textContent = 'שגיאה בטעינת משרות';
+  if (grid) {
+    grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">⚠️</div><h3>לא הצלחנו לטעון משרות</h3><p>נסה לרענן בעוד רגע</p></div></div>';
   }
+}
 
+async function loadJobs() {
+  showJobLoader();
+  renderJobsLoading();
   try {
-    const r = await fetch(`${API}/jobs`).then(r => r.json());
+    const url = new URL(`${API}/jobs`);
+    url.searchParams.set('_', Date.now().toString());
+    const r = await fetch(url.toString(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    }).then(r => r.json());
     const freshJobs = Array.isArray(r.data) ? r.data : [];
-    const cacheAgeMs = cached?.cachedAt ? (Date.now() - cached.cachedAt) : Infinity;
-    const shouldRefreshUi = !cached?.jobs?.length
-      || JSON.stringify(cached.jobs) !== JSON.stringify(freshJobs)
-      || cacheAgeMs > JOBS_CACHE_MAX_AGE_MS;
-
-    writeJobsCache(freshJobs);
-    if (shouldRefreshUi) {
-      renderJobsFromSource(freshJobs);
-    } else {
-      primeJobCache(freshJobs);
-      allJobs = freshJobs;
-    }
+    renderJobsFromSource(freshJobs);
     hideJobLoader();
   } catch (e) {
-    if (!cached?.jobs?.length) {
-      document.getElementById('stats-text').textContent = 'שגיאה בטעינת משרות';
-    }
+    renderJobsLoadError();
     hideJobLoader();
   }
 }
@@ -1475,16 +1493,6 @@ function deriveFilterOptionsFromJobs(jobs) {
     categories: Array.from(categories).sort((a, b) => a.localeCompare(b, 'he')),
     locations: Array.from(locations).sort((a, b) => a.localeCompare(b, 'he')),
   };
-}
-
-function syncFilterOptionsCacheFromJobs(jobs) {
-  try {
-    const derived = deriveFilterOptionsFromJobs(jobs);
-    localStorage.setItem('jobCategories', JSON.stringify(derived.categories));
-    localStorage.setItem('jobLocations', JSON.stringify(derived.locations));
-  } catch (error) {
-    // Ignore storage issues and keep working with in-memory data.
-  }
 }
 
 function primeJobCache(jobs) {
@@ -1569,6 +1577,7 @@ function truncateDescription(text, maxWidth, maxHeight, lineHeight = 1.5) {
 
 // ── Render job cards ─────────────────────────────────────
 function filterJobs() {
+  if (jobsLoading) return;
   const search = document.getElementById('search').value.toLowerCase();
 
   const filtered = allJobs.filter(j => {
@@ -2112,26 +2121,18 @@ function msRenderTags(id, selected, onRemove) {
 // Load and populate filter dropdowns
 async function loadFilterOptions() {
   try {
-    // Try to get from localStorage first
-    let categories = JSON.parse(localStorage.getItem('jobCategories') || 'null');
-    let locations = JSON.parse(localStorage.getItem('jobLocations') || 'null');
+    const cacheBust = Date.now().toString();
+    const fetchFresh = (path) => fetch(`${API}${path}?_=${cacheBust}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    }).then(r => r.json());
+    const [catRes, locRes] = await Promise.all([
+      fetchFresh('/categories'),
+      fetchFresh('/locations')
+    ]);
 
-    if ((!categories || !locations) && Array.isArray(allJobs) && allJobs.length) {
-      const derived = deriveFilterOptionsFromJobs(allJobs);
-      categories = categories || derived.categories;
-      locations = locations || derived.locations;
-    }
-
-    // If not in localStorage, fetch from API
-    if (!categories || !locations) {
-      const [catRes, locRes] = await Promise.all([
-        fetch(`${API}/categories`).then(r => r.json()),
-        fetch(`${API}/locations`).then(r => r.json())
-      ]);
-
-      categories = catRes.success ? catRes.data : [];
-      locations = locRes.success ? locRes.data : [];
-    }
+    const categories = catRes.success ? catRes.data : [];
+    const locations = locRes.success ? locRes.data : [];
 
     // Store globally and render lists
     allCategories = categories;
@@ -2146,6 +2147,13 @@ async function loadFilterOptions() {
 loadFilterOptions();
 loadJobs();
 setupScrollTopButton();
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    loadFilterOptions();
+    loadJobs();
+  }
+});
 
 // עדכן line-clamps כאשר הגודל משתנה
 </script>
