@@ -1471,13 +1471,36 @@ function truncate(str, max) {
 
 function splitField(val) {
   if (!val) return [];
-  try {
-    const parsed = JSON.parse(val);
-    return Array.isArray(parsed) ? parsed.map(s => String(s).trim()).filter(Boolean)
-                                 : [String(parsed).trim()];
-  } catch(e) {
-    return val.split(',').map(s => s.trim()).filter(Boolean);
+  if (Array.isArray(val)) return val.flatMap(splitField);
+  if (typeof val === 'object') {
+    const objectValue = val.name || val.label || val.value || val.title || '';
+    return objectValue ? splitField(objectValue) : [];
   }
+
+  const raw = String(val).trim();
+  if (!raw) return [];
+
+  if (['[', '{', '"'].includes(raw[0])) {
+    try {
+      return splitField(JSON.parse(raw));
+    } catch(e) {
+      // Fall through to delimiter splitting for malformed stored text.
+    }
+  }
+
+  return raw
+    .split(/[,;\n|]+/)
+    .map(s => s.trim())
+    .filter(s => s && !['-', '—', 'null', 'undefined'].includes(s.toLowerCase()));
+}
+
+function uniqueOptions(values) {
+  const options = new Map();
+  values.flatMap(splitField).forEach(value => {
+    const key = value.toLocaleLowerCase('he-IL');
+    if (!options.has(key)) options.set(key, value);
+  });
+  return Array.from(options.values()).sort((a, b) => a.localeCompare(b, 'he-IL'));
 }
 
 function deriveFilterOptionsFromJobs(jobs) {
@@ -1490,8 +1513,8 @@ function deriveFilterOptionsFromJobs(jobs) {
   });
 
   return {
-    categories: Array.from(categories).sort((a, b) => a.localeCompare(b, 'he')),
-    locations: Array.from(locations).sort((a, b) => a.localeCompare(b, 'he')),
+    categories: uniqueOptions(Array.from(categories)),
+    locations: uniqueOptions(Array.from(locations)),
   };
 }
 
@@ -1601,8 +1624,9 @@ function filterJobs() {
                            jobCategories.some(c => selectedCategories.includes(c));
 
     // Location filter - if locations selected, job must match at least one
+    const jobLocations = splitField(j.location);
     const matchesLocation = selectedLocations.length === 0 ||
-                           (j.location && selectedLocations.some(l => j.location.includes(l)));
+                            jobLocations.some(l => selectedLocations.includes(l));
 
     return matchesSearch && matchesCategory && matchesLocation;
   });
@@ -2135,8 +2159,8 @@ async function loadFilterOptions() {
     const locations = locRes.success ? locRes.data : [];
 
     // Store globally and render lists
-    allCategories = categories;
-    allLocations  = locations;
+    allCategories = uniqueOptions(categories);
+    allLocations  = uniqueOptions(locations);
     msRenderList('ms-category', allCategories, selectedCategories, 'msPickCategory', '');
     msRenderList('ms-location',  allLocations,  selectedLocations,  'msPickLocation',  '');
   } catch (e) {
