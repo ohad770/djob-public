@@ -660,6 +660,20 @@
     height: 44px;
     object-fit: contain;
     flex: 0 0 auto;
+    animation: job-footer-logo-sway 5.4s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @keyframes job-footer-logo-sway {
+    0%, 100% {
+      transform: translate3d(0, 0, 0);
+    }
+    35% {
+      transform: translate3d(4px, 0, 0);
+    }
+    70% {
+      transform: translate3d(-3px, 0, 0);
+    }
   }
 
   .job-footer-copy {
@@ -708,6 +722,11 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .job-footer-logo {
+      animation: none;
+      transform: none;
+    }
+
     .scroll-top-btn {
       transition: opacity 0.15s ease, visibility 0.15s ease;
       transform: none;
