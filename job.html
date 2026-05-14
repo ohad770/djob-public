@@ -394,6 +394,25 @@
     white-space: nowrap;
   }
 
+  .subtle-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gray-500);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.3;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.18s ease;
+  }
+
+  .subtle-back-link:hover {
+    color: var(--cyan-dark);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
   .share-btn {
     color: var(--cyan-dark);
     border-color: #a5f3fc;
@@ -713,7 +732,7 @@
         <div class="modal-header">
           <div class="header-top-row">
             <div class="modal-badges" id="modal-badges"></div>
-            <a class="btn btn-outline" href="/">חזרה לכל המשרות</a>
+            <a class="subtle-back-link" href="/">חזרה לכל המשרות</a>
           </div>
           <h2 id="modal-title">טוען משרה...</h2>
           <div class="meta-row" id="modal-meta"></div>
