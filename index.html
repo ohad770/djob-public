@@ -563,23 +563,55 @@
 
   .jobs-infinite-status {
     grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    padding: 4px 0 24px;
+  }
+
+  .jobs-infinite-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    min-height: 40px;
-    padding: 2px 0 22px;
-    color: var(--gray-500);
+    gap: 10px;
+    min-width: 210px;
+    min-height: 42px;
+    padding: 10px 18px;
+    border: 1px solid #bae6fd;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(236, 254, 255, 0.96), rgba(240, 249, 255, 0.96));
+    box-shadow: 0 12px 28px rgba(8, 145, 178, 0.10);
+    color: var(--cyan-dark);
     font-size: 13px;
+    font-weight: 600;
+  }
+
+  .jobs-infinite-status.is-ready .jobs-infinite-pill {
+    min-height: 34px;
+    padding: 8px 15px;
+    border-color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    color: var(--gray-500);
+    font-weight: 500;
   }
 
   .jobs-infinite-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #cffafe;
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid #cffafe;
     border-top-color: var(--cyan);
     border-radius: 50%;
     animation: spin 0.85s linear infinite;
+  }
+
+  .jobs-infinite-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--cyan);
+    box-shadow: 0 0 0 5px rgba(8, 145, 178, 0.10);
   }
 
   @keyframes spin {
@@ -2535,9 +2567,11 @@ function renderInfiniteJobsStatus() {
     ? 'טוען עוד משרות...'
     : `נטענו ${loadedText}${totalText ? ` מתוך ${totalText}` : ''} משרות`;
   return `
-    <div class="jobs-infinite-status" id="jobs-infinite-status" role="status" aria-live="polite">
-      ${jobsPageLoading ? '<span class="jobs-infinite-spinner" aria-hidden="true"></span>' : ''}
-      <span>${label}</span>
+    <div class="jobs-infinite-status ${jobsPageLoading ? 'is-loading' : 'is-ready'}" id="jobs-infinite-status" role="status" aria-live="polite">
+      <div class="jobs-infinite-pill">
+        ${jobsPageLoading ? '<span class="jobs-infinite-spinner" aria-hidden="true"></span>' : '<span class="jobs-infinite-dot" aria-hidden="true"></span>'}
+        <span>${label}</span>
+      </div>
     </div>
   `;
 }
