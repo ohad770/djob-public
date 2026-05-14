@@ -561,6 +561,27 @@
     color: var(--gray-500);
   }
 
+  .jobs-infinite-status {
+    grid-column: 1 / -1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 2px 0 22px;
+    color: var(--gray-500);
+    font-size: 13px;
+  }
+
+  .jobs-infinite-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #cffafe;
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.85s linear infinite;
+  }
+
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -2121,12 +2142,20 @@
 
 <script>
 const API = `${window.location.origin}/api`;
+const JOBS_PAGE_SIZE = 30;
 let allJobs = [];
 const jobCacheByPositionId = new Map();
 const jobCacheByJobNumber = new Map();
 let loaderShownAt = Date.now();
 let loaderHideTimer = null;
 let jobsLoading = false;
+let jobsPageLoading = false;
+let jobsTotalCount = 0;
+let jobsHasMore = false;
+let jobsNextOffset = 0;
+let jobsRequestId = 0;
+let jobsReloadTimer = null;
+let infiniteScrollTicking = false;
 
 function showJobLoader() {
   const loaderEl = document.getElementById('job-loader-overlay');
@@ -2156,7 +2185,11 @@ function hideJobLoader(immediate = false) {
 
 function renderJobsLoading() {
   jobsLoading = true;
+  jobsPageLoading = false;
   allJobs = [];
+  jobsTotalCount = 0;
+  jobsHasMore = false;
+  jobsNextOffset = 0;
   primeJobCache([]);
   const statsEl = document.getElementById('stats-text');
   const grid = document.getElementById('jobs-grid');
@@ -2172,17 +2205,26 @@ function renderJobsLoading() {
   }
 }
 
-function renderJobsFromSource(jobs) {
+function renderJobsFromSource(jobs, meta = {}) {
   jobsLoading = false;
-  allJobs = Array.isArray(jobs) ? jobs : [];
+  jobsPageLoading = false;
+  const rows = Array.isArray(jobs) ? jobs : [];
+  allJobs = meta.append ? allJobs.concat(rows) : rows;
+  jobsTotalCount = Number.isFinite(meta.total) ? meta.total : allJobs.length;
+  jobsHasMore = Boolean(meta.hasMore);
+  jobsNextOffset = allJobs.length;
   primeJobCache(allJobs);
-  document.getElementById('stats-text').textContent = `נמצאו ${allJobs.length} משרות`;
-  filterJobs();
+  renderLoadedJobs();
+  scheduleInfiniteJobsCheck();
 }
 
 function renderJobsLoadError() {
   jobsLoading = false;
+  jobsPageLoading = false;
   allJobs = [];
+  jobsTotalCount = 0;
+  jobsHasMore = false;
+  jobsNextOffset = 0;
   primeJobCache([]);
   const statsEl = document.getElementById('stats-text');
   const grid = document.getElementById('jobs-grid');
@@ -2192,23 +2234,70 @@ function renderJobsLoadError() {
   }
 }
 
-async function loadJobs() {
-  showJobLoader();
-  renderJobsLoading();
+function buildJobsQueryParams(offset) {
+  const params = new URLSearchParams();
+  const searchEl = document.getElementById('search');
+  const search = searchEl ? searchEl.value.trim() : '';
+  params.set('limit', String(JOBS_PAGE_SIZE));
+  params.set('offset', String(offset));
+  params.set('_', Date.now().toString());
+  if (search) params.set('search', search);
+  selectedCategories.forEach((category) => params.append('category', category));
+  selectedLocations.forEach((location) => params.append('location', location));
+  return params;
+}
+
+async function loadJobs(options = {}) {
+  const append = Boolean(options.append);
+  if (append) {
+    if (jobsLoading || jobsPageLoading || !jobsHasMore) return;
+    jobsPageLoading = true;
+    renderLoadedJobs();
+  } else {
+    jobsRequestId += 1;
+    showJobLoader();
+    renderJobsLoading();
+  }
+
+  const requestId = jobsRequestId;
+  const offset = append ? jobsNextOffset : 0;
   try {
     const url = new URL(`${API}/jobs`);
-    url.searchParams.set('_', Date.now().toString());
+    buildJobsQueryParams(offset).forEach((value, key) => url.searchParams.append(key, value));
     const r = await fetch(url.toString(), {
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache' },
     }).then(r => r.json());
+    if (!r.success) {
+      throw new Error(r.message || 'Failed to load jobs');
+    }
+    if (requestId !== jobsRequestId) return;
     const freshJobs = Array.isArray(r.data) ? r.data : [];
-    renderJobsFromSource(freshJobs);
-    hideJobLoader();
+    renderJobsFromSource(freshJobs, {
+      append,
+      total: Number.isFinite(r.total) ? r.total : r.count,
+      hasMore: Boolean(r.hasMore),
+    });
+    if (!append) hideJobLoader();
   } catch (e) {
-    renderJobsLoadError();
-    hideJobLoader();
+    if (requestId !== jobsRequestId) return;
+    if (append) {
+      jobsPageLoading = false;
+      renderLoadedJobs();
+    } else {
+      renderJobsLoadError();
+      hideJobLoader();
+    }
   }
+}
+
+function scheduleJobsReload() {
+  jobsRequestId += 1;
+  if (jobsReloadTimer) window.clearTimeout(jobsReloadTimer);
+  jobsReloadTimer = window.setTimeout(() => {
+    jobsReloadTimer = null;
+    loadJobs();
+  }, 220);
 }
 
 // ── Helpers ─────────────────────────────────────────────
@@ -2353,129 +2442,136 @@ function truncateDescription(text, maxWidth, maxHeight, lineHeight = 1.5) {
 }
 
 // ── Render job cards ─────────────────────────────────────
-function filterJobs() {
-  if (jobsLoading) return;
-  const search = document.getElementById('search').value.toLowerCase();
+function renderJobCard(j) {
+  const jobRef = JSON.stringify(j).replace(/"/g, '&quot;');
+  const isActive = !j.position_status || j.position_status === 'פעיל';
 
-  const filtered = allJobs.filter(j => {
-    // Search filter
-    const searchHaystack = [
-      j.title || '',
-      j.description || '',
-      j.description_preview || '',
-      j.job_number || '',
-      j.position_id || '',
-      j.category || '',
-      j.location || '',
-      j.job_type || '',
-      j.scope || '',
-      j.job_role || '',
-    ].join(' ').toLowerCase();
-    const matchesSearch = searchHaystack.includes(search);
+  // ── Header badges ──
+  const statusBadge = !isActive
+    ? `<span class="badge badge-status-${j.position_status === 'מושהה' ? 'paused' : 'inactive'}">${escHtml(j.position_status)}</span>`
+    : '';
 
-    // Category filter - if categories selected, job must match at least one
-    const jobCategories = splitField(j.category);
-    const matchesCategory = selectedCategories.length === 0 ||
-                           jobCategories.some(c => selectedCategories.includes(c));
+  // ── Categories ──
+  const cats = splitField(j.category);
+  const catsHtml = cats.map(c => `<span class="badge badge-category">${escHtml(c)}</span>`).join('');
 
-    // Location filter - if locations selected, job must match at least one
-    const jobLocations = splitField(j.location);
-    const matchesLocation = selectedLocations.length === 0 ||
-                            jobLocations.some(l => selectedLocations.includes(l));
+  // ── Description ──
+  const rawDesc = j.description || j.job_description || j.description_preview || '';
+  let desc = rawDesc;
+  if (desc) {
+    desc = truncateDescription(desc, 310, 155, 1.5);
+  }
 
-    return matchesSearch && matchesCategory && matchesLocation;
-  });
+  // ── Dates ──
+  const publishedFmt = fmtDate(j.publish_date || j.created_at);
+  const updatedFmt = fmtDate(j.updated_at);
+  const showUpdated = j.show_updated_date !== 0 && j.show_updated_date !== false && updatedFmt && updatedFmt !== publishedFmt;
 
+  // ── Employment / Salary ──
+  const empType  = j.job_type  ? `<span class="badge" style="font-size:11px;background:#f0f9ff;color:#0c4a6e">${escHtml(j.job_type)}</span>` : '';
+  const salary   = j.internal_salary ? `<div class="card-meta-item">💰 <span>${escHtml(j.internal_salary)}</span></div>` : '';
+
+  // ── CTA ──
+  let cta;
+  if (!isActive) {
+    cta = `<button class="btn btn-cta-disabled" disabled aria-disabled="true">⛔ משרה לא פעילה</button>`;
+  } else if (j.is_quick_apply) {
+    cta = `<button class="btn btn-cta-quick" type="button" onclick="event.stopPropagation();openJob(${jobRef}, { noresume: true })"
+             aria-label="צפייה והגשת מועמדות למשרה ${escHtml(j.title)}">צפייה והגשת מועמדות</button>`;
+  } else {
+    cta = `<button class="btn btn-cta-external" type="button" onclick="event.stopPropagation();openJob(${jobRef})"
+             aria-label="צפייה והגשת מועמדות למשרה ${escHtml(j.title)}">צפייה והגשת מועמדות</button>`;
+  }
+
+  return `
+    <div class="job-card" onclick="openJob(${jobRef})">
+
+      <div class="card-header">
+        <h3 class="card-title">${escHtml(j.title)}${j.is_hot ? ' 🔥' : ''}</h3>
+        <div class="card-header-badges">
+          <span class="badge badge-job-num">#${j.job_number}</span>
+          ${j.is_sticky ? '<span class="badge badge-sticky" title="מובטח">📌</span>' : ''}
+          ${statusBadge}
+        </div>
+      </div>
+
+      ${(j.location || catsHtml || empType) ? `
+      <div class="card-company">
+        ${j.location ? `<span class="card-company-name">📍 ${escHtml(j.location)}</span>` : ''}
+        ${catsHtml}
+        ${empType}
+      </div>` : ''}
+
+      ${desc ? `<p class="card-desc">${escHtml(desc).replace(/\n/g, '<br>')}</p>` : ''}
+
+      <div class="card-meta">
+        ${salary}
+      </div>
+
+      <div class="card-dates">
+        ${publishedFmt ? `<span>פורסם: ${publishedFmt}</span>` : ''}
+        ${showUpdated ? `<span>עודכן: ${updatedFmt}</span>` : ''}
+      </div>
+
+      <div class="card-cta">${cta}</div>
+    </div>
+  `;
+}
+
+function renderInfiniteJobsStatus() {
+  if (!jobsHasMore) return '';
+  const totalText = jobsTotalCount ? jobsTotalCount.toLocaleString('he-IL') : '';
+  const loadedText = allJobs.length.toLocaleString('he-IL');
+  const label = jobsPageLoading
+    ? 'טוען עוד משרות...'
+    : `נטענו ${loadedText}${totalText ? ` מתוך ${totalText}` : ''} משרות`;
+  return `
+    <div class="jobs-infinite-status" id="jobs-infinite-status" role="status" aria-live="polite">
+      ${jobsPageLoading ? '<span class="jobs-infinite-spinner" aria-hidden="true"></span>' : ''}
+      <span>${label}</span>
+    </div>
+  `;
+}
+
+function renderLoadedJobs() {
   const grid = document.getElementById('jobs-grid');
   const statsEl = document.getElementById('stats-text');
-  if (statsEl) statsEl.textContent = `נמצאו ${filtered.length} משרות`;
+  if (statsEl) statsEl.textContent = `נמצאו ${jobsTotalCount.toLocaleString('he-IL')} משרות`;
 
-  if (filtered.length === 0) {
+  if (!grid) return;
+  if (allJobs.length === 0) {
     grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🔍</div><h3>לא נמצאו משרות</h3><p>נסה לשנות את מילות החיפוש</p></div></div>';
     return;
   }
 
-  grid.innerHTML = filtered.map(j => {
-    const jobRef = JSON.stringify(j).replace(/"/g, '&quot;');
-    const isActive = !j.position_status || j.position_status === 'פעיל';
+  grid.innerHTML = allJobs.map(renderJobCard).join('') + renderInfiniteJobsStatus();
+}
 
-    // ── Header badges ──
-    const statusBadge = !isActive
-      ? `<span class="badge badge-status-${j.position_status === 'מושהה' ? 'paused' : 'inactive'}">${escHtml(j.position_status)}</span>`
-      : '';
+function loadMoreJobs() {
+  if (!jobsHasMore || jobsLoading || jobsPageLoading) return;
+  loadJobs({ append: true });
+}
 
-    // ── Categories ──
-    const cats = splitField(j.category);
-    const catsHtml = cats.map(c => `<span class="badge badge-category">${escHtml(c)}</span>`).join('');
+function shouldLoadMoreJobs() {
+  if (!jobsHasMore || jobsLoading || jobsPageLoading) return false;
+  const doc = document.documentElement;
+  const distanceToBottom = doc.scrollHeight - (window.scrollY + window.innerHeight);
+  return distanceToBottom < 900;
+}
 
-    // ── Regions ──
-    const regions = splitField(j.location);
-    const regionText = regions.length
-      ? '📍 ' + regions.slice(0, 3).map(escHtml).join(' · ') + (regions.length > 3 ? ` <span style="color:#9ca3af">+${regions.length - 3}</span>` : '')
-      : '';
+function checkInfiniteJobsScroll() {
+  infiniteScrollTicking = false;
+  if (shouldLoadMoreJobs()) loadMoreJobs();
+}
 
-    // ── Description ──
-    const rawDesc = j.description || j.job_description || j.description_preview || '';
-    let desc = rawDesc;
-    if (desc) {
-      desc = truncateDescription(desc, 310, 155, 1.5);
-    }
+function scheduleInfiniteJobsCheck() {
+  if (infiniteScrollTicking) return;
+  infiniteScrollTicking = true;
+  window.requestAnimationFrame(checkInfiniteJobsScroll);
+}
 
-    // ── Dates ──
-    const publishedFmt = fmtDate(j.publish_date || j.created_at);
-    const updatedFmt = fmtDate(j.updated_at);
-    const showUpdated = j.show_updated_date !== 0 && j.show_updated_date !== false && updatedFmt && updatedFmt !== publishedFmt;
-
-    // ── Employment / Salary ──
-    const empType  = j.job_type  ? `<span class="badge" style="font-size:11px;background:#f0f9ff;color:#0c4a6e">${escHtml(j.job_type)}</span>` : '';
-    const salary   = j.internal_salary ? `<div class="card-meta-item">💰 <span>${escHtml(j.internal_salary)}</span></div>` : '';
-
-    // ── CTA ──
-    let cta;
-    if (!isActive) {
-      cta = `<button class="btn btn-cta-disabled" disabled aria-disabled="true">⛔ משרה לא פעילה</button>`;
-    } else if (j.is_quick_apply) {
-      cta = `<button class="btn btn-cta-quick" type="button" onclick="event.stopPropagation();openJob(${jobRef}, { noresume: true })"
-               aria-label="צפייה והגשת מועמדות למשרה ${escHtml(j.title)}">צפייה והגשת מועמדות</button>`;
-    } else {
-      cta = `<button class="btn btn-cta-external" type="button" onclick="event.stopPropagation();openJob(${jobRef})"
-               aria-label="צפייה והגשת מועמדות למשרה ${escHtml(j.title)}">צפייה והגשת מועמדות</button>`;
-    }
-
-    return `
-      <div class="job-card" onclick="openJob(${jobRef})">
-
-        <div class="card-header">
-          <h3 class="card-title">${escHtml(j.title)}${j.is_hot ? ' 🔥' : ''}</h3>
-          <div class="card-header-badges">
-            <span class="badge badge-job-num">#${j.job_number}</span>
-            ${j.is_sticky ? '<span class="badge badge-sticky" title="מובטח">📌</span>' : ''}
-            ${statusBadge}
-          </div>
-        </div>
-
-        ${(j.location || catsHtml || empType) ? `
-        <div class="card-company">
-          ${j.location ? `<span class="card-company-name">📍 ${escHtml(j.location)}</span>` : ''}
-          ${catsHtml}
-          ${empType}
-        </div>` : ''}
-
-        ${desc ? `<p class="card-desc">${escHtml(desc).replace(/\n/g, '<br>')}</p>` : ''}
-
-        <div class="card-meta">
-          ${salary}
-        </div>
-
-        <div class="card-dates">
-          ${publishedFmt ? `<span>פורסם: ${publishedFmt}</span>` : ''}
-          ${showUpdated ? `<span>עודכן: ${updatedFmt}</span>` : ''}
-        </div>
-
-        <div class="card-cta">${cta}</div>
-      </div>
-    `;
-  }).join('');
+function filterJobs() {
+  scheduleJobsReload();
 }
 
 let currentJob = null;
@@ -3093,6 +3189,8 @@ loadFilterOptions();
 loadJobs();
 setupFloatingActionButtons();
 setupIOSBrandIconSway('.hero-brand-mark img');
+window.addEventListener('scroll', scheduleInfiniteJobsCheck, { passive: true });
+window.addEventListener('resize', scheduleInfiniteJobsCheck);
 
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) {

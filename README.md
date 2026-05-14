@@ -48,7 +48,7 @@ Notes:
 ## Public API contract
 The public site and the local sync engine use these endpoints:
 
-- `GET /api/jobs`
+- `GET /api/jobs` (optional `limit` + `offset` for paginated public listing)
 - `GET /api/jobs/by-number/:jobNumber`
 - `GET /api/positions/:positionId`
 - `GET /api/categories`
