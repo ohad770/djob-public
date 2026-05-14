@@ -1122,7 +1122,11 @@
     .modal-footer { flex-direction: column; }
     .modal h2 { font-size: 22px; }
     .meta-row { gap: 10px; }
-    .mobile-close-btn { display: none !important; }
+    .mobile-close-btn {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -2627,7 +2631,7 @@ function renderSidebar(job, position) {
         שלח מועמדות →
       </button>
 
-      <button class="btn btn-outline mobile-close-btn" onclick="closeModal()" style="display:block;width:100%;margin-top:8px;transition:.2s;background-color:#f3f4f6" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">✕ סגור</button>
+      <button class="btn btn-outline mobile-close-btn" type="button" onclick="closeModal()" style="width:100%;margin-top:8px;transition:.2s;background-color:#f3f4f6" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">סגור</button>
     </div>
   `;
 }
