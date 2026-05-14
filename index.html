@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>מצא את המשרה שלך | משרות פתוחות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gveret+Levin&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -11,6 +14,8 @@
     --cyan: #0891b2;
     --cyan-dark: #0e7490;
     --cyan-light: #06b6d4;
+    --primary-accent: #f59e0b;
+    --primary-accent-dark: #d97706;
     --amber: #d97706;
     --gray-900: #111827;
     --gray-700: #374151;
@@ -452,8 +457,12 @@
   }
 
   .badge-category {
-    background: #fef3c7;
-    color: #92400e;
+    background: #ecfeff;
+    color: #155e75;
+    border: 1px solid #a5f3fc;
+    border-radius: 6px;
+    padding: 3px 8px;
+    line-height: 1.15;
   }
 
   .flags {
@@ -495,7 +504,7 @@
 
   .card-company { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .card-company-name { font-size: 13px; font-weight: 600; color: var(--gray-700); display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
-  .card-cats { display: flex; gap: 4px; flex-wrap: wrap; }
+  .card-cats { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 
   .card-desc { font-size: 13px; color: var(--gray-600); line-height: 1.5; margin: 0; overflow: hidden; white-space: normal; word-wrap: break-word; word-break: break-word; }
   .card-ellipsis { font-size: 13px; color: var(--gray-500); line-height: 1; margin-top: 2px; }
@@ -586,6 +595,7 @@
   }
 
   .job-loader-overlay.hidden {
+    display: none;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -998,6 +1008,27 @@
     display: none !important;
   }
 
+  .modal-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    left: auto;
+    z-index: 6;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(229, 231, 235, 0.95);
+    color: #374151;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+  }
+
   .btn {
     padding: 10px 20px;
     border-radius: 8px;
@@ -1031,7 +1062,15 @@
   .badge-hot   { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
   .badge-quick { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
   .badge-sticky { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
-  .badge-job-num { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-family: monospace; }
+  .badge-job-num {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: monospace;
+    line-height: 1.15;
+  }
 
   /* ── Meta Row ── */
   .meta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; color: var(--gray-600); font-size: 14px; margin-top: 12px; }
@@ -1078,12 +1117,12 @@
     .hero { padding: 40px 16px; }
     .comparison { grid-template-columns: 1fr; }
     .modal { grid-template-columns: 1fr; width: 95vw; }
-    .modal-main { padding: 20px; }
+    .modal-main { padding: 64px 20px 20px; }
     .modal-sidebar { border-left: none; border-top: 1px solid #e5e7eb; }
     .modal-footer { flex-direction: column; }
     .modal h2 { font-size: 22px; }
     .meta-row { gap: 10px; }
-    .mobile-close-btn { display: block !important; }
+    .mobile-close-btn { display: none !important; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1095,46 +1134,81 @@
     }
   }
 
+  .mail-action-btn,
   .scroll-top-btn {
     position: fixed;
     right: 20px;
     bottom: 20px;
-    width: 56px;
+    min-width: 56px;
     height: 56px;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+    background: linear-gradient(135deg, var(--primary-accent), var(--primary-accent-dark));
     color: white;
-    box-shadow: 0 18px 30px rgba(8, 145, 178, 0.24);
-    font-size: 24px;
-    font-weight: 700;
+    box-shadow: 0 18px 30px rgba(245, 158, 11, 0.24);
+    font-size: 14px;
+    font-weight: 800;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    padding: 0 18px;
+    text-decoration: none;
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.22s ease, box-shadow 0.22s ease;
+    z-index: 90;
+  }
+
+  .scroll-top-btn {
+    width: 56px;
+    padding: 0;
+    background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+    box-shadow: 0 18px 30px rgba(8, 145, 178, 0.24);
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .mail-action-btn {
+    width: 56px;
+    padding: 0;
+  }
+
+  .mail-action-btn.is-hidden,
+  .scroll-top-btn.is-hidden {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(14px) scale(0.92);
-    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease;
-    z-index: 90;
+    transform: translateY(8px) scale(0.92);
+  }
+
+  .mail-action-btn:hover,
+  .scroll-top-btn:hover {
+    box-shadow: 0 24px 36px rgba(245, 158, 11, 0.3);
+    transform: translateY(-2px) scale(1);
   }
 
   .scroll-top-btn:hover {
     box-shadow: 0 24px 36px rgba(8, 145, 178, 0.28);
-    transform: translateY(-2px) scale(1);
   }
 
-  .scroll-top-btn.is-visible {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
+  .mail-action-btn:active,
+  .scroll-top-btn:active {
+    transform: translateY(0) scale(0.98);
   }
 
+  .mail-action-btn:focus-visible,
   .scroll-top-btn:focus-visible {
     outline: 3px solid rgba(255,255,255,0.85);
     outline-offset: 3px;
+  }
+
+  .mail-action-icon {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
   }
 
   .job-footer {
@@ -1190,24 +1264,616 @@
       font-size: 13px;
     }
 
+    .mail-action-btn,
     .scroll-top-btn {
       right: 16px;
       bottom: 16px;
       width: 52px;
+      min-width: 52px;
       height: 52px;
-      font-size: 22px;
+      padding: 0;
+    }
+
+    .mail-action-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .mail-action-btn,
     .scroll-top-btn {
-      transition: opacity 0.15s ease, visibility 0.15s ease;
+      transition: box-shadow 0.15s ease;
       transform: none;
     }
 
+    .mail-action-btn:hover,
+    .mail-action-btn:active,
     .scroll-top-btn:hover,
-    .scroll-top-btn.is-visible {
+    .scroll-top-btn:active {
       transform: none;
+    }
+  }
+
+  /* ── Base44-inspired home refresh ───────────────────── */
+  body {
+    background:
+      radial-gradient(circle at 50% -8%, rgba(255,255,255,0.96), rgba(255,255,255,0) 34rem),
+      linear-gradient(180deg, #fffdf8 0%, #fbfaf7 44%, #f8faf9 100%);
+    color: #111827;
+  }
+
+  .container {
+    max-width: 1180px;
+    padding: 0 18px;
+  }
+
+  .hero {
+    padding: 44px 16px 18px;
+  }
+
+  .hero-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    color: #111827;
+    font-size: 54px;
+    font-weight: 900;
+    line-height: 1.08;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .hero-title-brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .hero-brand-mark {
+    display: inline-flex;
+    width: 96px;
+    margin: 0 2px 0 0;
+    transform: translateY(0.16em);
+    filter: drop-shadow(0 14px 22px rgba(15, 90, 96, 0.14));
+  }
+
+  .hero-brand-mark img {
+    width: 100%;
+    height: auto;
+  }
+
+  .hero-highlight {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    margin: -2px auto 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #6b7280;
+    font-family: 'Gveret Levin', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .home-search-wrap {
+    max-width: 672px;
+    margin: 20px auto 0;
+    animation: slideUp 0.6s ease-out 0.08s both;
+  }
+
+  .filter-search-wrap {
+    flex: 1.45 1 300px;
+    max-width: none;
+    min-width: 260px;
+    margin: 0;
+    animation: none;
+  }
+
+  .filter-controls-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1.6 1 460px;
+    min-width: 0;
+  }
+
+  .home-search-wrap .search-container {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .search-input {
+    height: 40px;
+    padding: 0 44px 0 16px;
+    border: 1px solid #e3e7ed;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.9);
+    color: #111827;
+    font-size: 14px;
+    font-weight: 400;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  }
+
+  .search-input::placeholder {
+    color: #7b8492;
+  }
+
+  .search-input:focus {
+    border-color: #9bdbe7;
+    box-shadow: 0 6px 16px rgba(37, 92, 114, 0.09), 0 0 0 3px rgba(155, 219, 231, 0.14);
+  }
+
+  .search-icon {
+    right: 16px;
+    color: #9aa4b2;
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+  }
+
+  .filter-bar {
+    width: 100%;
+    max-width: 100%;
+    margin: 18px auto 28px;
+    padding: 14px 16px;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: nowrap;
+    border: 1px solid rgba(229, 231, 235, 0.9);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  }
+
+  .filter-label {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    color: #374151;
+    font-size: 15px;
+    font-weight: 500;
+    gap: 8px;
+  }
+
+  .filter-label svg {
+    width: 18px;
+    height: 18px;
+    stroke: #255c72;
+  }
+
+  .ms-dropdown {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .ms-field {
+    min-height: 40px;
+    border-color: #d8dee7;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .ms-dropdown.open .ms-field {
+    border-color: #b8c2ce;
+    box-shadow: 0 0 0 3px rgba(37, 92, 114, 0.08);
+  }
+
+  .ms-placeholder {
+    color: #6b7280;
+    font-weight: 550;
+  }
+
+  .ms-panel {
+    border-color: #d8dee7;
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.14);
+  }
+
+  .ms-dropdown.open .ms-panel {
+    border-color: #d8dee7;
+  }
+
+  .stats {
+    margin: 20px 0 8px;
+  }
+
+  .stats p {
+    color: #4b5563;
+    font-size: 19px;
+    font-weight: 400;
+  }
+
+  .jobs-grid {
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 22px;
+    padding: 26px 0 42px;
+    min-width: 0;
+  }
+
+  .job-card {
+    height: 340px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.98);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .job-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 34px rgba(15, 23, 42, 0.12);
+  }
+
+  .card-header {
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .card-title {
+    color: #111827;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.28;
+    white-space: nowrap;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .job-card h3.card-title {
+    color: #111827;
+  }
+
+  .card-header-badges {
+    order: 0;
+    min-width: 0;
+  }
+
+  .badge {
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+
+  .badge-job-num {
+    background: #f3f4f6;
+    color: #111827;
+    border-color: #eef0f3;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: inherit;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .badge-category {
+    background: #ecfeff;
+    color: #155e75;
+    border: 1px solid #a5f3fc;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .card-company {
+    align-items: center;
+    color: #4b5563;
+    justify-content: flex-start;
+    gap: 6px 8px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .card-company-name {
+    max-width: none;
+    min-width: 0;
+    flex: 0 1 auto;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  .card-desc {
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.5;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .card-dates {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 4px;
+    border-top: 1px solid #f3f4f6;
+    color: #9ca3af;
+    font-size: 11px;
+    font-weight: 400;
+    min-width: 0;
+  }
+
+  .card-cta .btn {
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 800;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-cta-external,
+  .btn-cta-quick {
+    background: #df9229;
+    color: #fff;
+    border: none;
+    box-shadow: 0 12px 22px rgba(223, 146, 41, 0.24);
+  }
+
+  .btn-cta-external:hover,
+  .btn-cta-quick:hover {
+    background: #c87c18;
+  }
+
+  .modal {
+    background: linear-gradient(135deg, #f9fafb 0%, #ecfeff 100%);
+    border: 1px solid rgba(255, 255, 255, 0.94);
+    box-shadow: 0 28px 60px rgba(8, 145, 178, 0.14);
+    position: relative;
+  }
+
+  .modal-main {
+    background: transparent;
+    padding: 32px 24px 24px;
+  }
+
+  .modal-sidebar {
+    background: transparent;
+    border-left-color: rgba(8, 145, 178, 0.12);
+    padding: 32px 24px 24px;
+  }
+
+  .modal-header,
+  .modal-section {
+    background: #ffffff;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+  }
+
+  .modal-section h3 {
+    border-bottom-color: #e5e7eb;
+  }
+
+  .modal h2 {
+    font-size: 24px;
+    line-height: 1.28;
+  }
+
+  .modal-meta,
+  .meta-row {
+    font-size: 13px;
+  }
+
+  .modal-section h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .modal-section p,
+  .modal-section li,
+  .modal-section .job-description-text {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .modal .badge {
+    font-size: 11px;
+  }
+
+  .modal-badges .badge {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #4b5563;
+    padding: 3px 8px;
+    line-height: 1.15;
+    box-shadow: none;
+  }
+
+  .modal-badges .badge-category {
+    background: #ecfeff;
+    border-color: #a5f3fc;
+    color: #155e75;
+    border-radius: 6px;
+    padding: 3px 8px;
+    line-height: 1.15;
+  }
+
+  .modal-badges .badge-hot {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #c2410c;
+  }
+
+  .modal-badges .badge-quick {
+    background: #dcfce7;
+    border-color: #bbf7d0;
+    color: #15803d;
+  }
+
+  .modal-badges .badge-sticky {
+    background: #fef9c3;
+    border-color: #fde68a;
+    color: #854d0e;
+  }
+
+  .modal-badges .badge-job-num {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    border-radius: 6px;
+    color: #374151;
+    padding: 3px 8px;
+    line-height: 1.15;
+  }
+
+  @media (min-width: 720px) {
+    .filter-bar .ms-dropdown {
+      flex: 1 1 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .modal-main {
+      padding: 64px 20px 20px;
+    }
+
+    .modal-sidebar {
+      padding: 0 20px 20px;
+    }
+
+    .modal-close-btn {
+      top: 16px;
+      right: 16px;
+      left: auto;
+    }
+
+    .jobs-grid {
+      grid-template-columns: minmax(0, 1fr);
+      width: 100%;
+      margin-right: auto;
+      margin-left: auto;
+      padding-right: 0;
+      padding-left: 0;
+      overflow-x: hidden;
+    }
+
+    .job-card {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .card-header,
+    .card-company,
+    .card-meta,
+    .card-dates,
+    .card-cta {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .card-company .badge,
+    .card-header-badges .badge {
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      padding: 34px 2px 16px;
+    }
+
+    .hero-title {
+      gap: 6px;
+      font-size: 32px;
+    }
+
+    .hero-brand-mark {
+      width: 64px;
+    }
+
+    .hero-highlight {
+      gap: 4px;
+      font-size: 16px;
+      margin-top: -1px;
+    }
+
+    .home-search-wrap {
+      margin-top: 20px;
+    }
+
+    .filter-search-wrap {
+      flex: 1 1 100%;
+      min-width: 100%;
+      margin-top: 0;
+      padding: 16px;
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .filter-bar {
+      width: 100%;
+      flex-wrap: wrap;
+      padding: 0;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      gap: 12px;
+    }
+
+    .filter-controls-wrap {
+      flex: 1 1 100%;
+      min-width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .filter-label {
+      flex: 0 0 100%;
+    }
+
+    .filter-controls-wrap .ms-dropdown {
+      flex: 1 1 100%;
+      min-width: 100%;
+    }
+
+    .jobs-grid {
+      padding-top: 22px;
     }
   }
 </style>
@@ -1233,64 +1899,83 @@
 
 <div class="container">
   <!-- Hero -->
-  <div class="hero">
-    <h2>מצא את המשרה המושלמת <span class="hero-brand-mark"><img src="/assets/job-logo-transparent.png" alt="DJob"></span></h2>
-    <div class="hero-highlight">לוח הדרושים המוביל בישראל - מאות משרות ממתינות לך</div>
-  </div>
+  <section class="hero">
+    <h2 class="hero-title">
+      <span>מצא את המשרה שלך</span>
+      <span class="hero-title-brand">
+        <span>ב-</span>
+        <span class="hero-brand-mark" aria-label="DJob">
+          <img src="/assets/job-logo-transparent.png" alt="" />
+        </span>
+      </span>
+    </h2>
+    <div class="hero-highlight">
+      <span>לוח הדרושים המוביל בישראל -</span>
+      <span>מאות משרות ממתינות לך</span>
+    </div>
+  </section>
 
   <!-- Filters -->
-  <div class="filter-bar">
-    <div class="filter-label">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M3 5H21L14 13V20L10 18V13L3 5Z" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span>סינון משרות:</span>
-    </div>
-
-    <!-- Category Multi-select -->
-    <div class="ms-dropdown" id="ms-category">
-      <div class="ms-field" onclick="msToggle('ms-category')">
-        <span class="ms-arrow">▼</span>
-        <span class="ms-placeholder" id="ms-category-ph">בחר קטגוריה...</span>
-        <div id="ms-category-tags" style="display:contents"></div>
-      </div>
-      <div class="ms-panel" onclick="event.stopPropagation()">
-        <div class="ms-search-wrap">
-          <span class="ms-search-icon">🔍</span>
-          <input class="ms-search" placeholder="חיפוש..." oninput="msSearch('ms-category', this.value)">
-        </div>
-        <div class="ms-list" id="ms-category-list"></div>
-      </div>
-    </div>
-
-    <!-- Location Multi-select -->
-    <div class="ms-dropdown" id="ms-location">
-      <div class="ms-field" onclick="msToggle('ms-location')">
-        <span class="ms-arrow">▼</span>
-        <span class="ms-placeholder" id="ms-location-ph">בחר אזורים...</span>
-        <div id="ms-location-tags" style="display:contents"></div>
-      </div>
-      <div class="ms-panel" onclick="event.stopPropagation()">
-        <div class="ms-search-wrap">
-          <span class="ms-search-icon">🔍</span>
-          <input class="ms-search" placeholder="חיפוש..." oninput="msSearch('ms-location', this.value)">
-        </div>
-        <div class="ms-list" id="ms-location-list"></div>
-      </div>
-    </div>
-
+  <section class="filter-bar" aria-label="סינון משרות">
     <!-- Free text search -->
-    <div class="search-container" style="flex: 1; min-width: 250px;">
-      <span class="search-icon">🔍</span>
-      <input
-        id="search"
-        type="text"
-        class="search-input"
-        placeholder="חיפוש משרות, חברות או מילות מפתח..."
-        oninput="filterJobs()"
-      >
+    <div class="home-search-wrap filter-search-wrap">
+      <div class="search-container">
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <input
+          id="search"
+          type="text"
+          class="search-input"
+          placeholder="חיפוש משרות, חברות או מילות מפתח..."
+          oninput="filterJobs()"
+        >
+      </div>
     </div>
-  </div>
+
+    <div class="filter-controls-wrap">
+      <div class="filter-label">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 5H21L14 13V20L10 18V13L3 5Z" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>סינון משרות:</span>
+      </div>
+
+      <!-- Category Multi-select -->
+      <div class="ms-dropdown" id="ms-category">
+        <div class="ms-field" onclick="msToggle('ms-category')">
+          <span class="ms-arrow">▼</span>
+          <span class="ms-placeholder" id="ms-category-ph">בחר קטגוריה...</span>
+          <div id="ms-category-tags" style="display:contents"></div>
+        </div>
+        <div class="ms-panel" onclick="event.stopPropagation()">
+          <div class="ms-search-wrap">
+            <span class="ms-search-icon">🔍</span>
+            <input class="ms-search" placeholder="חיפוש..." oninput="msSearch('ms-category', this.value)">
+          </div>
+          <div class="ms-list" id="ms-category-list"></div>
+        </div>
+      </div>
+
+      <!-- Location Multi-select -->
+      <div class="ms-dropdown" id="ms-location">
+        <div class="ms-field" onclick="msToggle('ms-location')">
+          <span class="ms-arrow">▼</span>
+          <span class="ms-placeholder" id="ms-location-ph">בחר אזורים...</span>
+          <div id="ms-location-tags" style="display:contents"></div>
+        </div>
+        <div class="ms-panel" onclick="event.stopPropagation()">
+          <div class="ms-search-wrap">
+            <span class="ms-search-icon">🔍</span>
+            <input class="ms-search" placeholder="חיפוש..." oninput="msSearch('ms-location', this.value)">
+          </div>
+          <div class="ms-list" id="ms-location-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Stats -->
   <div class="stats">
@@ -1323,11 +2008,8 @@
 <!-- Job Details Modal -->
 <div class="modal-overlay" id="modal" onclick="if(event.target.id === 'modal') closeModal()">
   <div class="modal">
+    <button class="modal-close-btn" type="button" onclick="closeModal()" aria-label="סגור">✕</button>
     <div class="modal-main">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-        <button class="btn btn-outline" onclick="closeModal()" style="padding: 6px 10px; font-size: 18px;">✕</button>
-        <div></div>
-      </div>
       <div class="modal-header">
         <div class="modal-badges" id="modal-badges"></div>
         <h2 id="modal-title"></h2>
@@ -1343,15 +2025,19 @@
   </div>
 </div>
 
-<button
-  id="scroll-top-btn"
-  class="scroll-top-btn"
-  type="button"
-  aria-label="חזרה לראש העמוד"
-  title="חזרה לראש העמוד"
+<a
+  id="mail-action-btn"
+  class="mail-action-btn"
+  href="mailto:cv@djob.agency"
+  aria-label="שליחת קורות חיים במייל"
+  title="שליחת קורות חיים במייל"
 >
-  ↑
-</button>
+  <svg class="mail-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 6.5h16a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 16V8A1.5 1.5 0 0 1 4 6.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="m4 8 8 5.4L20 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</a>
+<button id="scroll-top-btn" class="scroll-top-btn is-hidden" type="button" aria-label="חזרה לראש הדף" title="חזרה לראש הדף">↑</button>
 
 <!-- Comparison Modal -->
 <div class="modal-overlay" id="comparison-modal">
@@ -1372,7 +2058,6 @@ const jobCacheByJobNumber = new Map();
 let loaderShownAt = Date.now();
 let loaderHideTimer = null;
 let jobsLoading = false;
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function showJobLoader() {
   const loaderEl = document.getElementById('job-loader-overlay');
@@ -1608,6 +2293,7 @@ function filterJobs() {
     const searchHaystack = [
       j.title || '',
       j.description || '',
+      j.description_preview || '',
       j.job_number || '',
       j.position_id || '',
       j.category || '',
@@ -1660,18 +2346,16 @@ function filterJobs() {
       : '';
 
     // ── Description ──
-    let desc = j.description || '';
+    const rawDesc = j.description || j.job_description || j.description_preview || '';
+    let desc = rawDesc;
     if (desc) {
-      // כרטיס: 315px גובה כולל
-      // header ~30px, company ~25px, meta ~20px, dates ~20px, button ~40px, gaps ~40px
-      // = ~175px, כאן נותר ~140px לתיאור
-      desc = truncateDescription(desc, 310, 140, 1.5);
+      desc = truncateDescription(desc, 310, 155, 1.5);
     }
 
     // ── Dates ──
     const publishedFmt = fmtDate(j.publish_date || j.created_at);
     const updatedFmt = fmtDate(j.updated_at);
-    const showUpdated = j.show_updated_date !== 0 && updatedFmt && updatedFmt !== publishedFmt;
+    const showUpdated = j.show_updated_date !== 0 && j.show_updated_date !== false && updatedFmt && updatedFmt !== publishedFmt;
 
     // ── Employment / Salary ──
     const empType  = j.job_type  ? `<span class="badge" style="font-size:11px;background:#f0f9ff;color:#0c4a6e">${escHtml(j.job_type)}</span>` : '';
@@ -1683,10 +2367,10 @@ function filterJobs() {
       cta = `<button class="btn btn-cta-disabled" disabled aria-disabled="true">⛔ משרה לא פעילה</button>`;
     } else if (j.is_quick_apply) {
       cta = `<button class="btn btn-cta-quick" type="button" onclick="event.stopPropagation();openJob(${jobRef}, { noresume: true })"
-               aria-label="הגשה מהירה למשרה ${escHtml(j.title)}">⚡ הגשה מהירה ללא קו"ח</button>`;
+               aria-label="צפייה והגשת מועמדות למשרה ${escHtml(j.title)}">צפייה והגשת מועמדות</button>`;
     } else {
       cta = `<button class="btn btn-cta-external" type="button" onclick="event.stopPropagation();openJob(${jobRef})"
-               aria-label="הגשת מועמדות למשרה ${escHtml(j.title)}">הגש מועמדות ↗</button>`;
+               aria-label="צפייה והגשת מועמדות למשרה ${escHtml(j.title)}">צפייה והגשת מועמדות</button>`;
     }
 
     return `
@@ -1701,11 +2385,11 @@ function filterJobs() {
           </div>
         </div>
 
-        ${(j.location || cats.length) ? `
+        ${(j.location || catsHtml || empType) ? `
         <div class="card-company">
           ${j.location ? `<span class="card-company-name">📍 ${escHtml(j.location)}</span>` : ''}
-          ${catsHtml ? `<div class="card-cats">${catsHtml}</div>` : ''}
-          ${empType ? `<span>${empType}</span>` : ''}
+          ${catsHtml}
+          ${empType}
         </div>` : ''}
 
         ${desc ? `<p class="card-desc">${escHtml(desc).replace(/\n/g, '<br>')}</p>` : ''}
@@ -1728,6 +2412,7 @@ function filterJobs() {
 let currentJob = null;
 let currentPosition = null;
 let currentNoResume = false;
+let currentJobDetailRequest = 0;
 
 function resetJobModalScroll() {
   const overlayEl = document.getElementById('modal');
@@ -1741,25 +2426,70 @@ function resetJobModalScroll() {
   });
 }
 
+function cacheJobDetails(job) {
+  if (!job || typeof job !== 'object') return;
+  if (job.position_id) {
+    jobCacheByPositionId.set(String(job.position_id), job);
+  }
+  if (job.job_number) {
+    jobCacheByJobNumber.set(String(job.job_number), job);
+  }
+}
+
+async function fetchFullJobDetails(job) {
+  const cached = getCachedJobDetails(job) || job;
+  const jobNumber = String(job?.job_number || cached?.job_number || '').trim();
+  if (!jobNumber) return cached;
+
+  try {
+    const response = await fetch(`/api/jobs/by-number/${encodeURIComponent(jobNumber)}`, {
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    const row = payload?.data || payload?.job || payload;
+    if (!row || typeof row !== 'object') return cached;
+    const merged = { ...job, ...cached, ...row };
+    cacheJobDetails(merged);
+    return merged;
+  } catch (error) {
+    console.warn('Could not load full public job details:', error);
+    return cached;
+  }
+}
+
 // ── Open Job Modal ──────────────────────────────────────
 async function openJob(job, options = {}) {
+  const requestId = ++currentJobDetailRequest;
   currentJob = job;
-  const details = getCachedJobDetails(job) || job;
-  currentPosition = details;
   currentNoResume = options.noresume === true;
+
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-badges').innerHTML = '';
+  document.getElementById('modal-title').innerHTML = escHtml(job?.title || 'טוען משרה...');
+  document.getElementById('modal-meta').innerHTML = '';
+  document.getElementById('modal-body').innerHTML = '<div class="modal-section"><p>טוען את פרטי המשרה...</p></div>';
+  document.getElementById('modal-sidebar').innerHTML = '<div class="apply-card"><div class="apply-card-title">טוען טופס...</div></div>';
+  resetJobModalScroll();
+
+  const details = await fetchFullJobDetails(job);
+  if (requestId !== currentJobDetailRequest) return;
+
+  currentJob = details;
+  currentPosition = details;
   resetJobModalScroll();
 
   // Title
   const titleEl = document.getElementById('modal-title');
-  titleEl.innerHTML = escHtml(job.title) + (job.is_hot ? ' <span style="color:#f97316">🔥</span>' : '');
+  titleEl.innerHTML = escHtml(details.title || job.title || '') + (details.is_hot ? ' <span style="color:#f97316">🔥</span>' : '');
 
   // Badges row
   const badges = [];
   if (details?.category)      badges.push(`<span class="badge badge-category">${escHtml(details.category)}</span>`);
-  if (job.is_quick_apply) badges.push('<span class="badge badge-quick">⚡ הגשה מהירה</span>');
-  if (job.is_hot)         badges.push('<span class="badge badge-hot">🔥 חם</span>');
-  if (job.is_sticky)      badges.push('<span class="badge badge-sticky">📌 מובטח</span>');
-  if (job.job_number)     badges.push(`<span class="badge badge-job-num">#${job.job_number}</span>`);
+  if (details.is_quick_apply) badges.push('<span class="badge badge-quick">⚡ הגשה מהירה</span>');
+  if (details.is_hot)         badges.push('<span class="badge badge-hot">🔥 חם</span>');
+  if (details.is_sticky)      badges.push('<span class="badge badge-sticky">📌 מובטח</span>');
+  if (details.job_number)     badges.push(`<span class="badge badge-job-num">#${escHtml(details.job_number)}</span>`);
   document.getElementById('modal-badges').innerHTML = badges.join('');
 
   const meta = [];
@@ -1768,16 +2498,22 @@ async function openJob(job, options = {}) {
   if (details?.job_role)   meta.push(`<div class="meta-item">🧩 <span>${escHtml(details.job_role)}</span></div>`);
   if (details?.scope)      meta.push(`<div class="meta-item">⏰ <span>${escHtml(details.scope)}</span></div>`);
   if (details?.internal_salary) meta.push(`<div class="meta-item">💰 <span>${escHtml(details.internal_salary)}</span></div>`);
+  const publishedFmt = fmtDate(details.publish_date || details.created_at);
+  const updatedFmt = fmtDate(details.updated_at);
+  const showUpdated = details.show_updated_date !== 0 && details.show_updated_date !== false && updatedFmt && updatedFmt !== publishedFmt;
+  if (publishedFmt) meta.push(`<div class="meta-item">📅 <span>פורסם: ${escHtml(publishedFmt)}</span></div>`);
+  if (showUpdated) meta.push(`<div class="meta-item">🔄 <span>עודכן: ${escHtml(updatedFmt)}</span></div>`);
   document.getElementById('modal-meta').innerHTML = meta.join('') || '';
 
   // Description body
   let embeds = {};
-  try { embeds = job.embedding_statements ? JSON.parse(job.embedding_statements) : {}; } catch(e) {}
+  try { embeds = details.embedding_statements ? JSON.parse(details.embedding_statements) : {}; } catch(e) {}
+  const fullDescription = details.description || details.job_description || job.description || job.description_preview || '';
 
   let body = `
     <div class="modal-section">
       <h3>תיאור המשרה</h3>
-      <div style="font-size:15px;color:var(--gray-700);line-height:1.85;white-space:pre-wrap;">${escHtml(job.description || '–')}</div>
+      <div class="job-description-text" style="color:var(--gray-700);white-space:pre-wrap;">${escHtml(fullDescription || '–')}</div>
     </div>
   `;
 
@@ -1786,9 +2522,8 @@ async function openJob(job, options = {}) {
   }
 
   document.getElementById('modal-body').innerHTML = body;
-  renderSidebar(job, details);
+  renderSidebar(details, details);
 
-  document.getElementById('modal').classList.add('open');
   resetJobModalScroll();
   requestAnimationFrame(() => {
     resetJobModalScroll();
@@ -1805,12 +2540,14 @@ function renderSidebar(job, position) {
   // Build screening questions for apply form
   let sqHtml = '';
   if (position?.screening_questions) {
-    let qs = [];
-    try { qs = JSON.parse(position.screening_questions); } catch(e) {}
+    let qs = Array.isArray(position.screening_questions) ? position.screening_questions : [];
+    if (!qs.length) {
+      try { qs = JSON.parse(position.screening_questions); } catch(e) {}
+    }
     if (Array.isArray(qs) && qs.length > 0) {
       sqHtml = qs.map((q, i) => {
-        const txt = typeof q === 'string' ? q : (q.text || '');
-        const req = q.required === true;
+        const txt = typeof q === 'string' ? q : (q.text || q.question || q.label || '');
+        const req = q.required === true || q.is_required === true;
         return `
           <div class="form-group">
             <label class="form-label">${escHtml(txt)}${req ? '<span style="background:#fef3c7;color:#92400e;font-size:12px;padding:0 4px;display:inline;border-radius:3px"> דרישת חובה למשרה</span>' : ''}<span class="form-required">*</span></label>
@@ -1842,7 +2579,7 @@ function renderSidebar(job, position) {
 
   sidebar.innerHTML = `
     <div class="apply-card">
-      <div class="apply-card-title">🎯 הגש מועמדות</div>
+      <div class="apply-card-title">הגש מועמדות</div>
 
       <div class="form-group">
         <label class="form-label">שם מלא<span class="form-required">*</span></label>
@@ -2023,6 +2760,7 @@ async function showComparison() {
 }
 
 function closeModal()      {
+  currentJobDetailRequest++;
   document.getElementById('modal').classList.remove('open');
   resetJobModalScroll();
 }
@@ -2045,23 +2783,72 @@ function debounce(fn, ms) {
   };
 }
 
-function setupScrollTopButton() {
-  const button = document.getElementById('scroll-top-btn');
-  if (!button) return;
+function buildMailActionHref() {
+  return `mailto:cv@djob.agency?subject=${encodeURIComponent('אנא ציינו מספר משרה בפניה')}`;
+}
 
-  const updateVisibility = () => {
-    button.classList.toggle('is-visible', window.scrollY > 360);
+function setupFloatingActionButtons() {
+  const mailButton = document.getElementById('mail-action-btn');
+  const scrollButton = document.getElementById('scroll-top-btn');
+  if (!mailButton || !scrollButton) return;
+  const switchDelayMs = 420;
+  let visibleMode = null;
+  let pendingMode = null;
+  let switchTimer = null;
+
+  const refreshHref = () => {
+    mailButton.href = buildMailActionHref();
   };
 
-  button.addEventListener('click', () => {
-    window.scrollTo({
-      top: 0,
-      behavior: prefersReducedMotion ? 'auto' : 'smooth',
-    });
-  });
+  const applyMode = (mode) => {
+    visibleMode = mode;
+    pendingMode = null;
+    scrollButton.classList.toggle('is-hidden', mode !== 'scroll');
+    mailButton.classList.toggle('is-hidden', mode !== 'mail');
+  };
 
-  window.addEventListener('scroll', updateVisibility, { passive: true });
-  updateVisibility();
+  const requestMode = (mode, immediate = false) => {
+    refreshHref();
+    if (mode === visibleMode || mode === pendingMode) return;
+
+    pendingMode = mode;
+    clearTimeout(switchTimer);
+
+    if (immediate || visibleMode === null) {
+      applyMode(mode);
+      return;
+    }
+
+    scrollButton.classList.add('is-hidden');
+    mailButton.classList.add('is-hidden');
+    switchTimer = setTimeout(() => {
+      applyMode(pendingMode);
+      switchTimer = null;
+    }, switchDelayMs);
+  };
+
+  const syncVisibility = (immediate = false) => {
+    requestMode(window.scrollY > 280 ? 'scroll' : 'mail', immediate);
+  };
+
+  let ticking = false;
+  const scheduleSync = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      syncVisibility();
+    });
+  };
+
+  mailButton.addEventListener('pointerdown', refreshHref);
+  mailButton.addEventListener('focus', refreshHref);
+  scrollButton.addEventListener('click', () => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  });
+  window.addEventListener('scroll', scheduleSync, { passive: true });
+  syncVisibility(true);
 }
 
 // ── Multi-select state ───────────────────────────────────
@@ -2170,7 +2957,7 @@ async function loadFilterOptions() {
 
 loadFilterOptions();
 loadJobs();
-setupScrollTopButton();
+setupFloatingActionButtons();
 
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) {

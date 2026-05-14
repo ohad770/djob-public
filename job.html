@@ -39,12 +39,12 @@
   }
 
   .modal-page {
-    min-height: 100vh;
-    flex: 1;
+    min-height: auto;
+    flex: 0 0 auto;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 24px;
+    padding: 24px 24px 0;
   }
 
   .modal {
@@ -58,7 +58,7 @@
   }
 
   .modal-main {
-    padding: 32px;
+    padding: 24px;
     height: 100%;
   }
 
@@ -83,7 +83,6 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 12px;
   }
 
   .modal h2 {
@@ -213,15 +212,141 @@
   .badge-hot   { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
   .badge-quick { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
   .badge-sticky { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
-  .badge-job-num { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-family: monospace; }
-  .badge-category { background: #ecfeff; color: #155e75; border: 1px solid #a5f3fc; }
+  .badge-job-num {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: monospace;
+    line-height: 1.15;
+  }
+  .badge-category {
+    background: #ecfeff;
+    color: #155e75;
+    border: 1px solid #a5f3fc;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .modal {
+    background: linear-gradient(135deg, #f9fafb 0%, #ecfeff 100%);
+    border: 1px solid rgba(255, 255, 255, 0.94);
+    box-shadow: 0 28px 60px rgba(8, 145, 178, 0.14);
+  }
+
+  .modal-main {
+    background: transparent;
+  }
+
+  .modal-sidebar {
+    background: transparent;
+    border-left-color: rgba(8, 145, 178, 0.12);
+  }
+
+  .modal-header,
+  .modal-section {
+    background: #ffffff;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+  }
+
+  .modal-section h3 {
+    border-bottom-color: #e5e7eb;
+  }
+
+  .modal h2 {
+    font-size: 24px;
+    line-height: 1.28;
+  }
+
+  .modal-meta,
+  .meta-row {
+    font-size: 13px;
+  }
+
+  .modal-section h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .modal-section p,
+  .modal-section li,
+  .modal-section .job-description-text {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .modal .badge {
+    font-size: 11px;
+  }
+
+  .modal-badges .badge {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #4b5563;
+    padding: 3px 8px;
+    line-height: 1.15;
+    box-shadow: none;
+  }
+
+  .modal-badges .badge-category {
+    background: #ecfeff;
+    border-color: #a5f3fc;
+    color: #155e75;
+    border-radius: 6px;
+    padding: 3px 8px;
+    line-height: 1.15;
+  }
+
+  .modal-badges .badge-hot {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #c2410c;
+  }
+
+  .modal-badges .badge-quick {
+    background: #dcfce7;
+    border-color: #bbf7d0;
+    color: #15803d;
+  }
+
+  .modal-badges .badge-sticky {
+    background: #fef9c3;
+    border-color: #fde68a;
+    color: #854d0e;
+  }
+
+  .modal-badges .badge-job-num {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    border-radius: 6px;
+    color: #374151;
+    padding: 3px 8px;
+    line-height: 1.15;
+  }
 
   .meta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; color: var(--gray-600); font-size: 14px; margin-top: 12px; }
   .meta-item { display: flex; align-items: center; gap: 5px; }
   .meta-item strong { color: var(--gray-900); }
 
-  .apply-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-  .apply-card-title { font-size: 16px; font-weight: 700; color: var(--gray-900); padding-bottom: 12px; border-bottom: 1px solid #f3f4f6; margin: 0; }
+  .apply-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .apply-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .apply-card-title { font-size: 16px; font-weight: 700; color: var(--gray-900); margin: 0; }
   .form-group { display: flex; flex-direction: column; gap: 4px; }
   .form-label { font-size: 12px; font-weight: 600; color: var(--gray-600); }
   .form-required { color: #ef4444; margin-right: 2px; }
@@ -248,20 +373,31 @@
   .info-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-700); }
   .info-row strong { color: var(--gray-900); font-weight: 600; }
 
-  .page-actions {
+  .header-top-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
+    align-items: center;
+    margin-bottom: 12px;
     gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .header-top-row .btn,
+  .apply-card-head .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 14px;
+    font-size: 13px;
+    line-height: 1.15;
+    white-space: nowrap;
   }
 
   .share-btn {
     color: var(--cyan-dark);
     border-color: #a5f3fc;
-    font-size: 14px;
     font-weight: 700;
-    padding: 10px 16px;
   }
 
   .resume-notice {
@@ -574,12 +710,11 @@
   <div class="modal-page">
     <div class="modal" id="job-shell">
       <div class="modal-main">
-        <div class="page-actions">
-          <button class="btn btn-outline share-btn" id="share-btn" type="button">שיתוף</button>
-          <a class="btn btn-outline" href="/">חזרה לכל המשרות</a>
-        </div>
         <div class="modal-header">
-          <div class="modal-badges" id="modal-badges"></div>
+          <div class="header-top-row">
+            <div class="modal-badges" id="modal-badges"></div>
+            <a class="btn btn-outline" href="/">חזרה לכל המשרות</a>
+          </div>
           <h2 id="modal-title">טוען משרה...</h2>
           <div class="meta-row" id="modal-meta"></div>
         </div>
@@ -626,29 +761,29 @@ let loaderShownAt = Date.now();
 let loaderHideTimer = null;
 let pendingCvPickerSync = false;
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const shareButton = document.getElementById('share-btn');
-if (shareButton) {
-  shareButton.addEventListener('click', async () => {
-    const shareData = {
-      title: document.title,
-      text: currentJob?.title || 'משרה',
-      url: window.location.href,
-    };
+async function shareCurrentJob() {
+  const shareButton = document.getElementById('share-btn');
+  const shareData = {
+    title: document.title,
+    text: currentJob?.title || 'משרה',
+    url: window.location.href,
+  };
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      if (shareButton) {
         shareButton.textContent = 'הקישור הועתק';
         setTimeout(() => {
           shareButton.textContent = 'שיתוף';
         }, 1500);
       }
-    } catch (error) {
-      // User cancelled or share unavailable; keep the UI unchanged.
     }
-  });
+  } catch (error) {
+    // User cancelled or share unavailable; keep the UI unchanged.
+  }
 }
 
 function escHtml(str) {
@@ -754,7 +889,7 @@ function renderJob(job) {
   document.getElementById('modal-body').innerHTML = `
     <div class="modal-section">
       <h3>תיאור המשרה</h3>
-      <div style="font-size:15px;color:var(--gray-700);line-height:1.85;white-space:pre-wrap;">${escHtml(job.description || '–')}</div>
+      <div class="job-description-text" style="color:var(--gray-700);white-space:pre-wrap;">${escHtml(job.description || '–')}</div>
     </div>
     ${requirementsHtml}
   `;
@@ -814,7 +949,10 @@ function renderSidebar(job) {
 
   document.getElementById('modal-sidebar').innerHTML = `
     <div class="apply-card">
-      <div class="apply-card-title">הגש מועמדות</div>
+      <div class="apply-card-head">
+        <div class="apply-card-title">הגש מועמדות</div>
+        <button class="btn btn-outline share-btn" id="share-btn" type="button" onclick="shareCurrentJob()">שיתוף</button>
+      </div>
 
       ${noResumeNotice}
 
