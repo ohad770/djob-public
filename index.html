@@ -2926,11 +2926,12 @@ function setupFloatingActionButtons() {
 }
 
 function setupIOSBrandIconSway(selector) {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const isIOS = /iPad|iPhone|iPod|CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!isIOS) return;
 
-  const icons = Array.from(document.querySelectorAll(selector));
+  const icons = Array.from(document.querySelectorAll(selector))
+    .filter((icon) => icon.dataset.iosSwayActive !== '1');
   if (!icons.length) return;
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -2942,8 +2943,9 @@ function setupIOSBrandIconSway(selector) {
       frameId = null;
     }
     icons.forEach((icon) => {
-      icon.style.webkitTransform = '';
-      icon.style.transform = '';
+      icon.dataset.iosSwayActive = '';
+      icon.style.left = '';
+      icon.style.position = '';
     });
   };
 
@@ -2952,18 +2954,21 @@ function setupIOSBrandIconSway(selector) {
     if (reducedMotion.matches) return;
 
     icons.forEach((icon) => {
+      icon.dataset.iosSwayActive = '1';
       icon.style.webkitAnimation = 'none';
       icon.style.animation = 'none';
+      icon.style.webkitTransform = 'none';
+      icon.style.transform = 'none';
+      icon.style.position = 'relative';
+      icon.style.left = '0px';
     });
 
     const startedAt = performance.now();
     const tick = (now) => {
       const phase = ((now - startedAt) / 5400) * Math.PI * 2;
-      const x = Math.sin(phase) * 3.5;
-      const transform = `translate3d(${x.toFixed(2)}px, 0, 0)`;
+      const x = Math.sin(phase) * 8;
       icons.forEach((icon) => {
-        icon.style.webkitTransform = transform;
-        icon.style.transform = transform;
+        icon.style.left = `${x.toFixed(2)}px`;
       });
       frameId = requestAnimationFrame(tick);
     };
