@@ -1356,40 +1356,64 @@
   }
 
   .hero .hero-brand-mark {
-    --hero-brand-y: 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 96px;
     margin: 0;
     line-height: 0;
-    transform: translate3d(0, var(--hero-brand-y), 0);
-    animation: hero-brand-sway 5.4s ease-in-out infinite;
+    -webkit-transform: translate3d(0, 14px, 0);
+    transform: translate3d(0, 14px, 0);
     filter: drop-shadow(0 14px 22px rgba(15, 90, 96, 0.14));
-    will-change: transform;
   }
 
   .hero-brand-mark img {
+    display: block;
     width: 100%;
     height: auto;
+    -webkit-animation: hero-brand-sway 5.4s ease-in-out infinite;
+    animation: hero-brand-sway 5.4s ease-in-out infinite;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+
+  @-webkit-keyframes hero-brand-sway {
+    0%, 100% {
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+    35% {
+      -webkit-transform: translate3d(4px, 0, 0);
+      transform: translate3d(4px, 0, 0);
+    }
+    70% {
+      -webkit-transform: translate3d(-3px, 0, 0);
+      transform: translate3d(-3px, 0, 0);
+    }
   }
 
   @keyframes hero-brand-sway {
     0%, 100% {
-      transform: translate3d(0, var(--hero-brand-y), 0);
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
     }
     35% {
-      transform: translate3d(4px, var(--hero-brand-y), 0);
+      -webkit-transform: translate3d(4px, 0, 0);
+      transform: translate3d(4px, 0, 0);
     }
     70% {
-      transform: translate3d(-3px, var(--hero-brand-y), 0);
+      -webkit-transform: translate3d(-3px, 0, 0);
+      transform: translate3d(-3px, 0, 0);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero .hero-brand-mark {
+    .hero-brand-mark img {
+      -webkit-animation: none;
       animation: none;
-      transform: translate3d(0, var(--hero-brand-y), 0);
+      -webkit-transform: none;
+      transform: none;
     }
   }
 
@@ -1853,8 +1877,9 @@
     }
 
     .hero .hero-brand-mark {
-      --hero-brand-y: 6px;
       width: clamp(46px, 13.5vw, 58px);
+      -webkit-transform: translate3d(0, 6px, 0);
+      transform: translate3d(0, 6px, 0);
     }
 
     .hero-title-brand {

@@ -656,22 +656,46 @@
   }
 
   .job-footer-logo {
+    display: block;
     width: 44px;
     height: 44px;
     object-fit: contain;
     flex: 0 0 auto;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-animation: job-footer-logo-sway 5.4s ease-in-out infinite;
     animation: job-footer-logo-sway 5.4s ease-in-out infinite;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
     will-change: transform;
+  }
+
+  @-webkit-keyframes job-footer-logo-sway {
+    0%, 100% {
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+    35% {
+      -webkit-transform: translate3d(4px, 0, 0);
+      transform: translate3d(4px, 0, 0);
+    }
+    70% {
+      -webkit-transform: translate3d(-3px, 0, 0);
+      transform: translate3d(-3px, 0, 0);
+    }
   }
 
   @keyframes job-footer-logo-sway {
     0%, 100% {
+      -webkit-transform: translate3d(0, 0, 0);
       transform: translate3d(0, 0, 0);
     }
     35% {
+      -webkit-transform: translate3d(4px, 0, 0);
       transform: translate3d(4px, 0, 0);
     }
     70% {
+      -webkit-transform: translate3d(-3px, 0, 0);
       transform: translate3d(-3px, 0, 0);
     }
   }
@@ -723,7 +747,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .job-footer-logo {
+      -webkit-animation: none;
       animation: none;
+      -webkit-transform: none;
       transform: none;
     }
 
