@@ -394,7 +394,8 @@
     white-space: nowrap;
   }
 
-  .subtle-back-link {
+  .subtle-back-link,
+  .subtle-action-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -407,16 +408,27 @@
     transition: color 0.18s ease;
   }
 
-  .subtle-back-link:hover {
+  .subtle-action-link {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .subtle-back-link:hover,
+  .subtle-action-link:hover {
     color: var(--cyan-dark);
     text-decoration: underline;
     text-underline-offset: 3px;
   }
 
-  .share-btn {
-    color: var(--cyan-dark);
-    border-color: #a5f3fc;
-    font-weight: 700;
+  .subtle-back-link:focus-visible,
+  .subtle-action-link:focus-visible {
+    outline: 2px solid #a5f3fc;
+    outline-offset: 4px;
+    border-radius: 6px;
   }
 
   .resume-notice {
@@ -970,7 +982,7 @@ function renderSidebar(job) {
     <div class="apply-card">
       <div class="apply-card-head">
         <div class="apply-card-title">הגש מועמדות</div>
-        <button class="btn btn-outline share-btn" id="share-btn" type="button" onclick="shareCurrentJob()">שיתוף</button>
+        <button class="subtle-action-link" id="share-btn" type="button" onclick="shareCurrentJob()">שיתוף</button>
       </div>
 
       ${noResumeNotice}
