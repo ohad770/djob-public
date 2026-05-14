@@ -2052,7 +2052,6 @@
           type="text"
           class="search-input"
           placeholder="חיפוש משרות, חברות או מילות מפתח..."
-          oninput="filterJobs()"
         >
       </div>
     </div>
@@ -2175,20 +2174,20 @@
 <script>
 const API = `${window.location.origin}/api`;
 const JOBS_PAGE_SIZE = 30;
+const JOB_RENDER_AUTO_DELAY_MS = 70;
 let allJobs = [];
+let filteredJobs = [];
+let renderedJobsCount = 0;
+let renderJobsTimer = null;
+let renderJobsGeneration = 0;
 const jobCacheByPositionId = new Map();
 const jobCacheByJobNumber = new Map();
+const renderedJobCardCache = new Map();
 let loaderShownAt = Date.now();
 let loaderHideTimer = null;
 let jobsLoading = false;
-let jobsPageLoading = false;
 let jobsTotalCount = 0;
-let jobsHasMore = false;
-let jobsNextOffset = 0;
 let jobsRequestId = 0;
-let jobsReloadTimer = null;
-let jobsInitialPreloadQueued = false;
-let infiniteScrollTicking = false;
 
 function showJobLoader() {
   const loaderEl = document.getElementById('job-loader-overlay');
@@ -2217,13 +2216,13 @@ function hideJobLoader(immediate = false) {
 }
 
 function renderJobsLoading() {
+  stopBackgroundJobRendering();
   jobsLoading = true;
-  jobsPageLoading = false;
   allJobs = [];
+  filteredJobs = [];
+  renderedJobsCount = 0;
   jobsTotalCount = 0;
-  jobsHasMore = false;
-  jobsNextOffset = 0;
-  jobsInitialPreloadQueued = false;
+  renderedJobCardCache.clear();
   primeJobCache([]);
   const statsEl = document.getElementById('stats-text');
   const grid = document.getElementById('jobs-grid');
@@ -2241,29 +2240,22 @@ function renderJobsLoading() {
 
 function renderJobsFromSource(jobs, meta = {}) {
   jobsLoading = false;
-  jobsPageLoading = false;
   const rows = Array.isArray(jobs) ? jobs : [];
-  allJobs = meta.append ? allJobs.concat(rows) : rows;
+  allJobs = rows;
   jobsTotalCount = Number.isFinite(meta.total) ? meta.total : allJobs.length;
-  jobsHasMore = Boolean(meta.hasMore);
-  jobsNextOffset = allJobs.length;
+  renderedJobCardCache.clear();
   primeJobCache(allJobs);
-  renderLoadedJobs();
-  if (!meta.append) {
-    queueInitialJobsPreload();
-  } else {
-    scheduleInfiniteJobsCheck();
-  }
+  filterJobs();
 }
 
 function renderJobsLoadError() {
+  stopBackgroundJobRendering();
   jobsLoading = false;
-  jobsPageLoading = false;
   allJobs = [];
+  filteredJobs = [];
+  renderedJobsCount = 0;
   jobsTotalCount = 0;
-  jobsHasMore = false;
-  jobsNextOffset = 0;
-  jobsInitialPreloadQueued = false;
+  renderedJobCardCache.clear();
   primeJobCache([]);
   const statsEl = document.getElementById('stats-text');
   const grid = document.getElementById('jobs-grid');
@@ -2273,36 +2265,14 @@ function renderJobsLoadError() {
   }
 }
 
-function buildJobsQueryParams(offset) {
-  const params = new URLSearchParams();
-  const searchEl = document.getElementById('search');
-  const search = searchEl ? searchEl.value.trim() : '';
-  params.set('limit', String(JOBS_PAGE_SIZE));
-  params.set('offset', String(offset));
-  params.set('_', Date.now().toString());
-  if (search) params.set('search', search);
-  selectedCategories.forEach((category) => params.append('category', category));
-  selectedLocations.forEach((location) => params.append('location', location));
-  return params;
-}
-
-async function loadJobs(options = {}) {
-  const append = Boolean(options.append);
-  if (append) {
-    if (jobsLoading || jobsPageLoading || !jobsHasMore) return;
-    jobsPageLoading = true;
-    renderLoadedJobs();
-  } else {
-    jobsRequestId += 1;
-    showJobLoader();
-    renderJobsLoading();
-  }
-
+async function loadJobs() {
+  jobsRequestId += 1;
+  showJobLoader();
+  renderJobsLoading();
   const requestId = jobsRequestId;
-  const offset = append ? jobsNextOffset : 0;
   try {
     const url = new URL(`${API}/jobs`);
-    buildJobsQueryParams(offset).forEach((value, key) => url.searchParams.append(key, value));
+    url.searchParams.set('_', Date.now().toString());
     const r = await fetch(url.toString(), {
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache' },
@@ -2313,32 +2283,14 @@ async function loadJobs(options = {}) {
     if (requestId !== jobsRequestId) return;
     const freshJobs = Array.isArray(r.data) ? r.data : [];
     renderJobsFromSource(freshJobs, {
-      append,
       total: Number.isFinite(r.total) ? r.total : r.count,
-      hasMore: Boolean(r.hasMore),
     });
-    if (!append) hideJobLoader();
+    hideJobLoader();
   } catch (e) {
     if (requestId !== jobsRequestId) return;
-    if (append) {
-      jobsPageLoading = false;
-      renderLoadedJobs();
-    } else {
-      renderJobsLoadError();
-      hideJobLoader();
-    }
+    renderJobsLoadError();
+    hideJobLoader();
   }
-}
-
-function scheduleJobsReload() {
-  jobsRequestId += 1;
-  jobsInitialPreloadQueued = false;
-  jobsHasMore = false;
-  if (jobsReloadTimer) window.clearTimeout(jobsReloadTimer);
-  jobsReloadTimer = window.setTimeout(() => {
-    jobsReloadTimer = null;
-    loadJobs();
-  }, 220);
 }
 
 // ── Helpers ─────────────────────────────────────────────
@@ -2483,7 +2435,14 @@ function truncateDescription(text, maxWidth, maxHeight, lineHeight = 1.5) {
 }
 
 // ── Render job cards ─────────────────────────────────────
+function getJobCardCacheKey(job) {
+  return job.uuid || job.position_id || job.job_number || `${job.title || ''}:${job.created_at || ''}`;
+}
+
 function renderJobCard(j) {
+  const cacheKey = getJobCardCacheKey(j);
+  if (renderedJobCardCache.has(cacheKey)) return renderedJobCardCache.get(cacheKey);
+
   const jobRef = JSON.stringify(j).replace(/"/g, '&quot;');
   const isActive = !j.position_status || j.position_status === 'פעיל';
 
@@ -2524,7 +2483,7 @@ function renderJobCard(j) {
              aria-label="צפייה והגשת מועמדות למשרה ${escHtml(j.title)}">צפייה והגשת מועמדות</button>`;
   }
 
-  return `
+  const html = `
     <div class="job-card" onclick="openJob(${jobRef})">
 
       <div class="card-header">
@@ -2557,83 +2516,98 @@ function renderJobCard(j) {
       <div class="card-cta">${cta}</div>
     </div>
   `;
+
+  renderedJobCardCache.set(cacheKey, html);
+  return html;
 }
 
-function renderInfiniteJobsStatus() {
-  if (!jobsHasMore) return '';
-  const totalText = jobsTotalCount ? jobsTotalCount.toLocaleString('he-IL') : '';
-  const loadedText = allJobs.length.toLocaleString('he-IL');
-  const label = jobsPageLoading
-    ? 'טוען עוד משרות...'
-    : `נטענו ${loadedText}${totalText ? ` מתוך ${totalText}` : ''} משרות`;
-  return `
-    <div class="jobs-infinite-status ${jobsPageLoading ? 'is-loading' : 'is-ready'}" id="jobs-infinite-status" role="status" aria-live="polite">
-      <div class="jobs-infinite-pill">
-        ${jobsPageLoading ? '<span class="jobs-infinite-spinner" aria-hidden="true"></span>' : '<span class="jobs-infinite-dot" aria-hidden="true"></span>'}
-        <span>${label}</span>
-      </div>
-    </div>
-  `;
+function stopBackgroundJobRendering() {
+  renderJobsGeneration += 1;
+  if (renderJobsTimer) {
+    window.clearTimeout(renderJobsTimer);
+    renderJobsTimer = null;
+  }
+}
+
+function scheduleNextJobsBatch(generation) {
+  if (renderedJobsCount >= filteredJobs.length) return;
+
+  renderJobsTimer = window.setTimeout(() => {
+    renderJobsTimer = null;
+    const run = () => appendNextJobsBatch(generation);
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(run, { timeout: 350 });
+    } else {
+      run();
+    }
+  }, JOB_RENDER_AUTO_DELAY_MS);
+}
+
+function appendNextJobsBatch(generation) {
+  if (generation !== renderJobsGeneration || jobsLoading) return;
+
+  const grid = document.getElementById('jobs-grid');
+  if (!grid) return;
+
+  const from = renderedJobsCount;
+  const to = Math.min(from + JOBS_PAGE_SIZE, filteredJobs.length);
+  if (to <= from) return;
+
+  grid.insertAdjacentHTML('beforeend', filteredJobs.slice(from, to).map(renderJobCard).join(''));
+  renderedJobsCount = to;
+  scheduleNextJobsBatch(generation);
 }
 
 function renderLoadedJobs() {
   const grid = document.getElementById('jobs-grid');
   const statsEl = document.getElementById('stats-text');
-  if (statsEl) statsEl.textContent = `נמצאו ${jobsTotalCount.toLocaleString('he-IL')} משרות`;
+  const totalCount = filteredJobs.length;
+  if (statsEl) statsEl.textContent = `נמצאו ${totalCount.toLocaleString('he-IL')} משרות`;
 
   if (!grid) return;
-  if (allJobs.length === 0) {
+  if (totalCount === 0) {
+    renderedJobsCount = 0;
     grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🔍</div><h3>לא נמצאו משרות</h3><p>נסה לשנות את מילות החיפוש</p></div></div>';
     return;
   }
 
-  grid.innerHTML = allJobs.map(renderJobCard).join('') + renderInfiniteJobsStatus();
-}
-
-function loadMoreJobs() {
-  if (!jobsHasMore || jobsLoading || jobsPageLoading) return;
-  loadJobs({ append: true });
-}
-
-function queueInitialJobsPreload() {
-  if (jobsInitialPreloadQueued || !jobsHasMore || allJobs.length !== JOBS_PAGE_SIZE) return;
-  jobsInitialPreloadQueued = true;
-  window.setTimeout(() => {
-    if (!jobsHasMore || jobsLoading || jobsPageLoading || allJobs.length !== JOBS_PAGE_SIZE) return;
-    loadMoreJobs();
-  }, 80);
-}
-
-function getFirstVisibleJobIndex() {
-  const cards = document.querySelectorAll('#jobs-grid .job-card');
-  const viewportTop = 80;
-  for (let index = 0; index < cards.length; index += 1) {
-    const rect = cards[index].getBoundingClientRect();
-    if (rect.bottom > viewportTop) return index;
-  }
-  return cards.length;
-}
-
-function shouldLoadMoreJobs() {
-  if (!jobsHasMore || jobsLoading || jobsPageLoading) return false;
-  if (allJobs.length < JOBS_PAGE_SIZE * 2) return false;
-  const nextPageTriggerIndex = Math.max(0, allJobs.length - JOBS_PAGE_SIZE);
-  return getFirstVisibleJobIndex() >= nextPageTriggerIndex;
-}
-
-function checkInfiniteJobsScroll() {
-  infiniteScrollTicking = false;
-  if (shouldLoadMoreJobs()) loadMoreJobs();
-}
-
-function scheduleInfiniteJobsCheck() {
-  if (infiniteScrollTicking) return;
-  infiniteScrollTicking = true;
-  window.requestAnimationFrame(checkInfiniteJobsScroll);
+  renderedJobsCount = Math.min(JOBS_PAGE_SIZE, totalCount);
+  grid.innerHTML = filteredJobs.slice(0, renderedJobsCount).map(renderJobCard).join('');
+  scheduleNextJobsBatch(renderJobsGeneration);
 }
 
 function filterJobs() {
-  scheduleJobsReload();
+  if (jobsLoading) return;
+  stopBackgroundJobRendering();
+
+  const search = document.getElementById('search').value.trim().toLowerCase();
+  filteredJobs = allJobs.filter((job) => {
+    const searchableText = [
+      job.title,
+      job.description,
+      job.job_description,
+      job.description_preview,
+      job.job_number,
+      job.position_id,
+      job.category,
+      job.location,
+      job.job_type,
+      job.scope,
+      job.job_role,
+    ].filter(Boolean).join(' ').toLowerCase();
+    const matchesSearch = !search || searchableText.includes(search);
+
+    const jobCategories = splitField(job.category);
+    const matchesCategory = selectedCategories.length === 0 ||
+      jobCategories.some((category) => selectedCategories.includes(category));
+
+    const jobLocations = splitField(job.location);
+    const matchesLocation = selectedLocations.length === 0 ||
+      jobLocations.some((location) => selectedLocations.includes(location));
+
+    return matchesSearch && matchesCategory && matchesLocation;
+  });
+  renderLoadedJobs();
 }
 
 let currentJob = null;
@@ -3251,8 +3225,6 @@ loadFilterOptions();
 loadJobs();
 setupFloatingActionButtons();
 setupIOSBrandIconSway('.hero-brand-mark img');
-window.addEventListener('scroll', scheduleInfiniteJobsCheck, { passive: true });
-window.addEventListener('resize', scheduleInfiniteJobsCheck);
 
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) {
