@@ -837,6 +837,61 @@ let loaderShownAt = Date.now();
 let loaderHideTimer = null;
 let pendingCvPickerSync = false;
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function setupIOSBrandIconSway(selector) {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!isIOS) return;
+
+  const icons = Array.from(document.querySelectorAll(selector));
+  if (!icons.length) return;
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let frameId = null;
+
+  const stop = () => {
+    if (frameId !== null) {
+      cancelAnimationFrame(frameId);
+      frameId = null;
+    }
+    icons.forEach((icon) => {
+      icon.style.webkitTransform = '';
+      icon.style.transform = '';
+    });
+  };
+
+  const start = () => {
+    stop();
+    if (reducedMotion.matches) return;
+
+    icons.forEach((icon) => {
+      icon.style.webkitAnimation = 'none';
+      icon.style.animation = 'none';
+    });
+
+    const startedAt = performance.now();
+    const tick = (now) => {
+      const phase = ((now - startedAt) / 5400) * Math.PI * 2;
+      const x = Math.sin(phase) * 3.5;
+      const transform = `translate3d(${x.toFixed(2)}px, 0, 0)`;
+      icons.forEach((icon) => {
+        icon.style.webkitTransform = transform;
+        icon.style.transform = transform;
+      });
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+  };
+
+  if (typeof reducedMotion.addEventListener === 'function') {
+    reducedMotion.addEventListener('change', start);
+  } else if (typeof reducedMotion.addListener === 'function') {
+    reducedMotion.addListener(start);
+  }
+  window.addEventListener('pagehide', stop);
+  start();
+}
+
 async function shareCurrentJob() {
   const shareButton = document.getElementById('share-btn');
   const shareData = {
@@ -1267,6 +1322,7 @@ async function loadJob() {
 
 loadJob();
 setupScrollTopButton();
+setupIOSBrandIconSway('.job-footer-logo');
 </script>
 </body>
 </html>
