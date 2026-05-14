@@ -6,7 +6,7 @@
 <title>מצא את המשרה שלך | משרות פתוחות</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gveret+Levin&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&family=Gveret+Levin&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1319,19 +1319,28 @@
     padding: 44px 16px 18px;
   }
 
-  .hero-title {
+  .hero .hero-title {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     gap: 8px;
     margin: 0;
-    color: #111827;
-    font-size: 54px;
-    font-weight: 900;
-    line-height: 1.08;
+    color: #3a7477;
+    font-family: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 50px;
+    font-weight: 600;
+    line-height: 1.04;
     letter-spacing: 0;
     white-space: nowrap;
+  }
+
+  .hero-title-text,
+  .hero-title-preposition {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    transform: translateY(-0.1em);
   }
 
   .hero-title-brand {
@@ -1339,13 +1348,17 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
+    line-height: 1;
   }
 
-  .hero-brand-mark {
+  .hero .hero-brand-mark {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 96px;
     margin: 0 2px 0 0;
-    transform: translateY(0.16em);
+    line-height: 0;
+    transform: translateY(14px);
     filter: drop-shadow(0 14px 22px rgba(15, 90, 96, 0.14));
   }
 
@@ -1808,13 +1821,18 @@
       padding: 34px 2px 16px;
     }
 
-    .hero-title {
-      gap: 6px;
-      font-size: 32px;
+    .hero .hero-title {
+      gap: 4px;
+      font-size: clamp(22px, 6.7vw, 30px);
     }
 
-    .hero-brand-mark {
-      width: 64px;
+    .hero .hero-brand-mark {
+      width: clamp(46px, 13.5vw, 58px);
+      transform: translateY(6px);
+    }
+
+    .hero-title-brand {
+      gap: 6px;
     }
 
     .hero-highlight {
@@ -1901,9 +1919,9 @@
   <!-- Hero -->
   <section class="hero">
     <h2 class="hero-title">
-      <span>מצא את המשרה שלך</span>
+      <span class="hero-title-text">מצא את המשרה שלך</span>
       <span class="hero-title-brand">
-        <span>ב-</span>
+        <span class="hero-title-preposition">ב-</span>
         <span class="hero-brand-mark" aria-label="DJob">
           <img src="/assets/job-logo-transparent.png" alt="" />
         </span>
