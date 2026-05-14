@@ -2155,6 +2155,7 @@ let jobsHasMore = false;
 let jobsNextOffset = 0;
 let jobsRequestId = 0;
 let jobsReloadTimer = null;
+let jobsInitialPreloadQueued = false;
 let infiniteScrollTicking = false;
 
 function showJobLoader() {
@@ -2190,6 +2191,7 @@ function renderJobsLoading() {
   jobsTotalCount = 0;
   jobsHasMore = false;
   jobsNextOffset = 0;
+  jobsInitialPreloadQueued = false;
   primeJobCache([]);
   const statsEl = document.getElementById('stats-text');
   const grid = document.getElementById('jobs-grid');
@@ -2215,7 +2217,11 @@ function renderJobsFromSource(jobs, meta = {}) {
   jobsNextOffset = allJobs.length;
   primeJobCache(allJobs);
   renderLoadedJobs();
-  scheduleInfiniteJobsCheck();
+  if (!meta.append) {
+    queueInitialJobsPreload();
+  } else {
+    scheduleInfiniteJobsCheck();
+  }
 }
 
 function renderJobsLoadError() {
@@ -2225,6 +2231,7 @@ function renderJobsLoadError() {
   jobsTotalCount = 0;
   jobsHasMore = false;
   jobsNextOffset = 0;
+  jobsInitialPreloadQueued = false;
   primeJobCache([]);
   const statsEl = document.getElementById('stats-text');
   const grid = document.getElementById('jobs-grid');
@@ -2293,6 +2300,8 @@ async function loadJobs(options = {}) {
 
 function scheduleJobsReload() {
   jobsRequestId += 1;
+  jobsInitialPreloadQueued = false;
+  jobsHasMore = false;
   if (jobsReloadTimer) window.clearTimeout(jobsReloadTimer);
   jobsReloadTimer = window.setTimeout(() => {
     jobsReloadTimer = null;
@@ -2552,11 +2561,30 @@ function loadMoreJobs() {
   loadJobs({ append: true });
 }
 
+function queueInitialJobsPreload() {
+  if (jobsInitialPreloadQueued || !jobsHasMore || allJobs.length !== JOBS_PAGE_SIZE) return;
+  jobsInitialPreloadQueued = true;
+  window.setTimeout(() => {
+    if (!jobsHasMore || jobsLoading || jobsPageLoading || allJobs.length !== JOBS_PAGE_SIZE) return;
+    loadMoreJobs();
+  }, 80);
+}
+
+function getFirstVisibleJobIndex() {
+  const cards = document.querySelectorAll('#jobs-grid .job-card');
+  const viewportTop = 80;
+  for (let index = 0; index < cards.length; index += 1) {
+    const rect = cards[index].getBoundingClientRect();
+    if (rect.bottom > viewportTop) return index;
+  }
+  return cards.length;
+}
+
 function shouldLoadMoreJobs() {
   if (!jobsHasMore || jobsLoading || jobsPageLoading) return false;
-  const doc = document.documentElement;
-  const distanceToBottom = doc.scrollHeight - (window.scrollY + window.innerHeight);
-  return distanceToBottom < 900;
+  if (allJobs.length < JOBS_PAGE_SIZE * 2) return false;
+  const nextPageTriggerIndex = Math.max(0, allJobs.length - JOBS_PAGE_SIZE);
+  return getFirstVisibleJobIndex() >= nextPageTriggerIndex;
 }
 
 function checkInfiniteJobsScroll() {
