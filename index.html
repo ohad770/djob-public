@@ -2458,30 +2458,14 @@ async function fetchFullJobDetails(job) {
   }
 }
 
-// ── Open Job Modal ──────────────────────────────────────
-async function openJob(job, options = {}) {
-  const requestId = ++currentJobDetailRequest;
-  currentJob = job;
-  currentNoResume = options.noresume === true;
-
-  document.getElementById('modal').classList.add('open');
-  document.getElementById('modal-badges').innerHTML = '';
-  document.getElementById('modal-title').innerHTML = escHtml(job?.title || 'טוען משרה...');
-  document.getElementById('modal-meta').innerHTML = '';
-  document.getElementById('modal-body').innerHTML = '<div class="modal-section"><p>טוען את פרטי המשרה...</p></div>';
-  document.getElementById('modal-sidebar').innerHTML = '<div class="apply-card"><div class="apply-card-title">טוען טופס...</div></div>';
-  resetJobModalScroll();
-
-  const details = await fetchFullJobDetails(job);
-  if (requestId !== currentJobDetailRequest) return;
-
+function renderJobModal(details, fallbackJob = {}, options = {}) {
+  const shouldResetScroll = options.resetScroll !== false;
   currentJob = details;
   currentPosition = details;
-  resetJobModalScroll();
 
   // Title
   const titleEl = document.getElementById('modal-title');
-  titleEl.innerHTML = escHtml(details.title || job.title || '') + (details.is_hot ? ' <span style="color:#f97316">🔥</span>' : '');
+  titleEl.innerHTML = escHtml(details.title || fallbackJob.title || '') + (details.is_hot ? ' <span style="color:#f97316">🔥</span>' : '');
 
   // Badges row
   const badges = [];
@@ -2508,7 +2492,7 @@ async function openJob(job, options = {}) {
   // Description body
   let embeds = {};
   try { embeds = details.embedding_statements ? JSON.parse(details.embedding_statements) : {}; } catch(e) {}
-  const fullDescription = details.description || details.job_description || job.description || job.description_preview || '';
+  const fullDescription = details.description || details.job_description || fallbackJob.description || fallbackJob.job_description || fallbackJob.description_preview || '';
 
   let body = `
     <div class="modal-section">
@@ -2524,13 +2508,34 @@ async function openJob(job, options = {}) {
   document.getElementById('modal-body').innerHTML = body;
   renderSidebar(details, details);
 
-  resetJobModalScroll();
-  requestAnimationFrame(() => {
+  if (shouldResetScroll) {
     resetJobModalScroll();
     requestAnimationFrame(() => {
       resetJobModalScroll();
+      requestAnimationFrame(() => {
+        resetJobModalScroll();
+      });
     });
-  });
+  }
+}
+
+// ── Open Job Modal ──────────────────────────────────────
+async function openJob(job, options = {}) {
+  const requestId = ++currentJobDetailRequest;
+  currentNoResume = options.noresume === true;
+
+  const initialDetails = getCachedJobDetails(job) || job;
+  cacheJobDetails(initialDetails);
+
+  document.getElementById('modal').classList.add('open');
+  renderJobModal(initialDetails, job, { resetScroll: true });
+
+  const details = await fetchFullJobDetails(initialDetails);
+  if (requestId !== currentJobDetailRequest) return;
+
+  if (details && details !== initialDetails) {
+    renderJobModal(details, initialDetails, { resetScroll: false });
+  }
 }
 
 // ── Sidebar renderer ────────────────────────────────────
