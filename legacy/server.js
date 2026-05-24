@@ -103,7 +103,6 @@ db.exec(`
 db.exec(`
   UPDATE public_jobs SET
     original_job_number = NULL,
-    job_source = NULL,
     is_preferred = 0,
     svt_url = NULL,
     manager_name = NULL,
@@ -467,11 +466,13 @@ app.post('/api/sync/jobs', requireSyncSecret, (req, res) => {
   const upsert = db.prepare(`
     INSERT INTO public_jobs (
       uuid, job_number, title, description,
+      job_source,
       is_hot, is_sticky, is_quick_apply, show_updated_date,
       embedding_statements, position_id, category, location, job_type, scope,
       position_status, internal_salary, screening_questions, created_at, updated_at
     ) VALUES (
       @uuid, @job_number, @title, @description,
+      @job_source,
       @is_hot, @is_sticky, @is_quick_apply, @show_updated_date,
       @embedding_statements, @position_id, @category, @location, @job_type, @scope,
       @position_status, @internal_salary, @screening_questions, @created_at, @updated_at
@@ -480,6 +481,7 @@ app.post('/api/sync/jobs', requireSyncSecret, (req, res) => {
       uuid=excluded.uuid,
       title=excluded.title,
       description=excluded.description,
+      job_source=excluded.job_source,
       is_hot=excluded.is_hot,
       is_sticky=excluded.is_sticky,
       is_quick_apply=excluded.is_quick_apply,
@@ -496,7 +498,6 @@ app.post('/api/sync/jobs', requireSyncSecret, (req, res) => {
       created_at=excluded.created_at,
       updated_at=excluded.updated_at,
       original_job_number=NULL,
-      job_source=NULL,
       is_preferred=0,
       svt_url=NULL,
       manager_name=NULL,
@@ -509,7 +510,6 @@ app.post('/api/sync/jobs', requireSyncSecret, (req, res) => {
   const cleanupUnusedFieldsStmt = db.prepare(`
     UPDATE public_jobs SET
       original_job_number = NULL,
-      job_source = NULL,
       is_preferred = 0,
       svt_url = NULL,
       manager_name = NULL,
@@ -526,6 +526,7 @@ app.post('/api/sync/jobs', requireSyncSecret, (req, res) => {
         job_number: row.job_number || null,
         title: row.title || null,
         description: row.description || null,
+        job_source: row.job_source || null,
         is_hot: row.is_hot ? 1 : 0,
         is_sticky: row.is_sticky ? 1 : 0,
         is_quick_apply: row.is_quick_apply ? 1 : 0,
@@ -577,9 +578,9 @@ app.get('/api/jobs', (req, res) => {
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  query += ' ORDER BY updated_at DESC';
+  query += ` ORDER BY CASE WHEN lower(COALESCE(job_source, '')) = 'meof' THEN 0 ELSE 1 END ASC, updated_at DESC`;
   const rows = db.prepare(query).all(...params);
-  res.json({ success: true, count: rows.length, data: rows });
+  res.json({ success: true, count: rows.length, supports_job_source: true, data: rows });
 });
 
 app.get('/api/jobs/by-number/:jobNumber', (req, res) => {
