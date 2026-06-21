@@ -57,6 +57,10 @@
     grid-template-columns: 1fr 350px;
   }
 
+  .modal.inactive-state {
+    min-height: clamp(620px, 74vh, 820px);
+  }
+
   .modal-main {
     padding: 24px;
     height: 100%;
@@ -465,6 +469,7 @@
     border-radius: 12px;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
     padding: 28px;
+    height: 100%;
   }
 
   .inactive-job-main {
@@ -1068,7 +1073,9 @@ function splitField(val) {
 
 function renderError(message) {
   hideJobLoader();
-  document.getElementById('job-shell').innerHTML = `
+  const shell = document.getElementById('job-shell');
+  shell.classList.remove('inactive-state');
+  shell.innerHTML = `
     <div class="modal-main empty-state">
       <h1 style="font-size:32px;margin-bottom:12px">לא ניתן לטעון את המשרה</h1>
       <p>${escHtml(message)}</p>
@@ -1083,7 +1090,9 @@ function renderInactiveJobState(message) {
   hideJobLoader();
   document.title = 'המשרה כבר לא פעילה | DJob';
   const details = String(message || '').trim() || 'המשרה שחיפשת כבר לא זמינה להגשת מועמדות.';
-  document.getElementById('job-shell').innerHTML = `
+  const shell = document.getElementById('job-shell');
+  shell.classList.add('inactive-state');
+  shell.innerHTML = `
     <section class="modal-main inactive-job-main">
       <div class="inactive-job-eyebrow">המשרה כבר לא פעילה</div>
       <h1 class="inactive-job-title">המשרה שחיפשת כבר לא זמינה להגשת מועמדות</h1>
@@ -1145,6 +1154,7 @@ function hideJobLoader() {
 function renderJob(job) {
   currentJob = job;
   document.title = `${job.title} | הגש מועמדות`;
+  document.getElementById('job-shell').classList.remove('inactive-state');
 
   let embeds = {};
   try {
