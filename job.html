@@ -452,6 +452,123 @@
     color: var(--gray-600);
   }
 
+  .inactive-job-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+    gap: 20px;
+    width: 100%;
+  }
+
+  .inactive-job-main,
+  .inactive-job-side {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    padding: 28px;
+  }
+
+  .inactive-job-main {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    justify-content: center;
+  }
+
+  .inactive-job-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #bae6fd;
+    background: #f0f9ff;
+    color: var(--cyan-dark);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .inactive-job-title {
+    font-size: clamp(28px, 4.2vw, 38px);
+    line-height: 1.15;
+    color: var(--gray-900);
+    margin: 0;
+  }
+
+  .inactive-job-copy {
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--gray-600);
+    max-width: 44ch;
+  }
+
+  .inactive-job-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .inactive-job-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 18px 30px rgba(8, 145, 178, 0.22);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .inactive-job-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 22px 34px rgba(8, 145, 178, 0.28);
+  }
+
+  .inactive-job-side {
+    background: linear-gradient(180deg, #f9fafb 0%, #eff9f7 100%);
+    border: 1px solid rgba(8, 145, 178, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .inactive-job-side-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--gray-900);
+  }
+
+  .inactive-job-side-copy {
+    color: var(--gray-600);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .inactive-job-list {
+    display: grid;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .inactive-job-list li {
+    background: rgba(255,255,255,0.86);
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--gray-700);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
   .job-loader-overlay {
     position: fixed;
     inset: 0;
@@ -715,6 +832,9 @@
 
     .modal-main { padding: 20px; }
     .modal-sidebar { border-left: none; border-top: 1px solid #e5e7eb; }
+    .inactive-job-shell {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 640px) {
@@ -957,6 +1077,46 @@ function renderError(message) {
       <a class="btn btn-outline" href="/">חזרה לעמוד הבית</a>
     </div>
   `;
+}
+
+function renderInactiveJobState(message) {
+  hideJobLoader();
+  document.title = 'המשרה כבר לא פעילה | DJob';
+  const details = String(message || '').trim() || 'המשרה שחיפשת כבר לא זמינה להגשת מועמדות.';
+  document.getElementById('job-shell').innerHTML = `
+    <div class="inactive-job-shell">
+      <section class="inactive-job-main">
+        <div class="inactive-job-eyebrow">המשרה כבר לא פעילה</div>
+        <h1 class="inactive-job-title">המשרה שחיפשת כבר לא זמינה להגשת מועמדות</h1>
+        <p class="inactive-job-copy">
+          ייתכן שהמשרה כבר אוישה, הוקפאה או הוסרה מהאתר מאז שקיבלת את הקישור.
+          אפשר להמשיך מכאן ישר לשאר המשרות הפעילות ולמצוא תפקידים עדכניים ורלוונטיים.
+        </p>
+        <p class="inactive-job-copy">${escHtml(details)}</p>
+        <div class="inactive-job-actions">
+          <a class="inactive-job-primary" href="/">לצפייה בכל המשרות הפעילות</a>
+          <a class="btn btn-outline" href="/">חזרה לעמוד הבית</a>
+        </div>
+      </section>
+      <aside class="inactive-job-side">
+        <div class="inactive-job-side-title">מה אפשר לעשות עכשיו?</div>
+        <p class="inactive-job-side-copy">האתר מתעדכן באופן שוטף, כך ששווה להציץ במשרות החדשות והפעילות שעולות כל הזמן.</p>
+        <ul class="inactive-job-list">
+          <li>לעבור על כל המשרות הפתוחות באתר</li>
+          <li>לחפש לפי מילות מפתח, תחום או אזור</li>
+          <li>להגיש מועמדות למשרות פעילות ועדכניות</li>
+        </ul>
+      </aside>
+    </div>
+  `;
+}
+
+function shouldRenderInactiveJobState(error, responseStatus, result) {
+  if (Number(responseStatus || 0) === 404) return true;
+  const code = String(result?.code || '').trim();
+  if (code === 'JOB_INACTIVE_OR_NOT_FOUND') return true;
+  const message = String(error?.message || result?.message || '').trim();
+  return /job not found|המשרה לא נמצאה|המשרה כבר לא פעילה|לא פעילה|inactive/i.test(message);
 }
 
 function showJobLoader(title = 'מעלים את המשרה', subtitle = 'רק עוד רגע ואנחנו בפנים') {
@@ -1317,10 +1477,17 @@ async function loadJob() {
     const response = await fetch(`${API}/jobs/by-number/${encodeURIComponent(jobNumber)}`);
     const result = await response.json();
     if (!response.ok || !result.success || !result.data) {
-      throw new Error(result.message || 'המשרה לא נמצאה');
+      const error = new Error(result.message || 'המשרה לא נמצאה');
+      error.responseStatus = response.status;
+      error.result = result;
+      throw error;
     }
     renderJob(result.data);
   } catch (error) {
+    if (shouldRenderInactiveJobState(error, error?.responseStatus, error?.result)) {
+      renderInactiveJobState(error?.message || 'המשרה כבר לא פעילה או הוסרה מהאתר');
+      return;
+    }
     renderError(error.message || 'המשרה לא נמצאה');
   }
 }
