@@ -1084,30 +1084,27 @@ function renderInactiveJobState(message) {
   document.title = 'המשרה כבר לא פעילה | DJob';
   const details = String(message || '').trim() || 'המשרה שחיפשת כבר לא זמינה להגשת מועמדות.';
   document.getElementById('job-shell').innerHTML = `
-    <div class="inactive-job-shell">
-      <section class="inactive-job-main">
-        <div class="inactive-job-eyebrow">המשרה כבר לא פעילה</div>
-        <h1 class="inactive-job-title">המשרה שחיפשת כבר לא זמינה להגשת מועמדות</h1>
-        <p class="inactive-job-copy">
-          ייתכן שהמשרה כבר אוישה, הוקפאה או הוסרה מהאתר מאז שקיבלת את הקישור.
-          אפשר להמשיך מכאן ישר לשאר המשרות הפעילות ולמצוא תפקידים עדכניים ורלוונטיים.
-        </p>
-        <p class="inactive-job-copy">${escHtml(details)}</p>
-        <div class="inactive-job-actions">
-          <a class="inactive-job-primary" href="/">לצפייה בכל המשרות הפעילות</a>
-          <a class="btn btn-outline" href="/">חזרה לעמוד הבית</a>
-        </div>
-      </section>
-      <aside class="inactive-job-side">
-        <div class="inactive-job-side-title">מה אפשר לעשות עכשיו?</div>
-        <p class="inactive-job-side-copy">האתר מתעדכן באופן שוטף, כך ששווה להציץ במשרות החדשות והפעילות שעולות כל הזמן.</p>
-        <ul class="inactive-job-list">
-          <li>לעבור על כל המשרות הפתוחות באתר</li>
-          <li>לחפש לפי מילות מפתח, תחום או אזור</li>
-          <li>להגיש מועמדות למשרות פעילות ועדכניות</li>
-        </ul>
-      </aside>
-    </div>
+    <section class="modal-main inactive-job-main">
+      <div class="inactive-job-eyebrow">המשרה כבר לא פעילה</div>
+      <h1 class="inactive-job-title">המשרה שחיפשת כבר לא זמינה להגשת מועמדות</h1>
+      <p class="inactive-job-copy">
+        ייתכן שהמשרה כבר אוישה, הוקפאה או הוסרה מהאתר מאז שקיבלת את הקישור.
+        אפשר להמשיך מכאן ישר לשאר המשרות הפעילות ולמצוא תפקידים עדכניים ורלוונטיים.
+      </p>
+      <p class="inactive-job-copy">${escHtml(details)}</p>
+      <div class="inactive-job-actions">
+        <a class="inactive-job-primary" href="/">לצפייה בכל המשרות הפעילות</a>
+      </div>
+    </section>
+    <aside class="modal-sidebar inactive-job-side">
+      <div class="inactive-job-side-title">מה אפשר לעשות עכשיו?</div>
+      <p class="inactive-job-side-copy">האתר מתעדכן באופן שוטף, כך ששווה להציץ במשרות החדשות והפעילות שעולות כל הזמן.</p>
+      <ul class="inactive-job-list">
+        <li>לעבור על כל המשרות הפתוחות באתר</li>
+        <li>לחפש לפי מילות מפתח, תחום או אזור</li>
+        <li>להגיש מועמדות למשרות פעילות ועדכניות</li>
+      </ul>
+    </aside>
   `;
 }
 
