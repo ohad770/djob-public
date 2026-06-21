@@ -58,7 +58,7 @@
   }
 
   .modal.inactive-state {
-    min-height: clamp(620px, 74vh, 820px);
+    min-height: max(760px, calc(100vh - 104px));
   }
 
   .modal-main {
@@ -839,6 +839,9 @@
     .modal-sidebar { border-left: none; border-top: 1px solid #e5e7eb; }
     .inactive-job-shell {
       grid-template-columns: 1fr;
+    }
+    .modal.inactive-state {
+      min-height: auto;
     }
   }
 
